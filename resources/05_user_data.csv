@@ -1,0 +1,21 @@
+﻿"Akad. Titel","Vorname","Nachname","E-Mailadresse","Telefonnummer","Strasse","Hausnummer","Längengrad","Breitengrad","Postleitzahl","Ort","Land","Rolle"
+"Dr.","Felix","Brenner","felix.brenner@example.org","+49 251 482917-10","Prinzipalmarkt","10","07.626134","51.962331","48143","Muenster",DE,ADMIN
+"","Laura","Seidel","laura.seidel@example.org","+49 30 483920-21","Alexanderplatz","1","13.413215","52.521918","10178","Berlin",DE,USER
+"Prof.","Nora","Kappel","nora.kappel@example.org","+49 40 614582-33","Rathausmarkt","1","09.993682","53.550341","20095","Hamburg",DE,USER
+"","Jonas","Reuter","jonas.reuter@example.org","+49 89 274619-44","Marienplatz","8","11.575382","48.137393","80331","Muenchen",DE,USER
+"PhD","Mara","Schilling","mara.schilling@example.org","+49 221 593728-55","Rathausplatz","2","06.959976","50.938361","50667","Koeln",DE,MODERATOR
+"","Timo","Lange","timo.lange@example.org","+49 69 382746-66","Roemerberg","23","08.682127","50.110924","60311","Frankfurt am Main",DE,USER
+"","Sophie","Hartmann","sophie.hartmann@example.org","+49 211 947263-77","Marktplatz","2","06.772821","51.225402","40213","Duesseldorf",DE,USER
+"","Ben","Krueger","ben.krueger@example.org","+49 231 582746-12","Friedensplatz","1","07.464231","51.513587","44135","Dortmund",DE,ADMIN
+"Dr.","Clara","Neumann","clara.neumann@example.org","+49 341 673829-23","Martin-Luther-Ring","4-6","12.373075","51.339695","04109","Leipzig",DE,USER
+"","David","Sommer","david.sommer@example.org","+49 351 729184-34","Dr.-Kuelz-Ring","19","13.738112","51.048891","01067","Dresden",DE,USER
+"Prof.","Eva","Brandt","eva.brandt@example.org","+49 511 384729-45","Trammplatz","2","09.737165","52.367373","30159","Hannover",DE,MODERATOR
+"","Milan","Schwarz","milan.schwarz@example.org","+49 421 638291-56","Am Markt","21","08.807121","53.076540","28195","Bremen",DE,USER
+"","Lena","Vogel","lena.vogel@example.org","+49 201 472839-67","Porscheplatz","1","07.012875","51.455643","45127","Essen",DE,USER
+"Dr.","Oskar","Becker","oskar.becker@example.org","+49 711 293847-78","Marktplatz","1","09.177017","48.775845","70173","Stuttgart",DE,ADMIN
+"","Amelie","Wagner","amelie.wagner@example.org","+49 911 582937-89","Rathausplatz","2","11.077298","49.455094","90403","Nuernberg",DE,USER
+"","Paul","Klein","paul.klein@example.org","+49 228 473829-90","Berliner Platz","2","07.095488","50.735851","53111","Bonn",DE,USER
+"PhD","Helena","Fischer","helena.fischer@example.org","+49 241 648291-11","Markt","1","06.083887","50.775346","52062","Aachen",DE,USER
+"","Leon","Weber","leon.weber@example.org","+49 431 582746-22","Fleethoern","9","10.134721","54.319351","24103","Kiel",DE,USER
+"","Marie","Schulte","marie.schulte@example.org","+49 451 743829-33","Breite Strasse","62","10.685559","53.868492","23552","Luebeck",DE,MODERATOR
+"Prof.","Anton","Meier","anton.meier@example.org","+49 6131 582746-44","Jockel-Fuchs-Platz","1","08.274206","49.999497","55116","Mainz",DE,ADMIN
