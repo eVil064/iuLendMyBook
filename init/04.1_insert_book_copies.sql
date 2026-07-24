@@ -20,10 +20,10 @@ ORDER BY random() * book_id
 LIMIT 25
 ON CONFLICT DO NOTHING;
 
-INSERT INTO book_copy_fulfillment (copy_id, fulfillment_id)
+INSERT INTO book_copy_fulfillment (book_copy_id, fulfillment_type_id)
 SELECT bc.book_copy_id, t.fulfillment_type_id
 FROM book_copy bc
          INNER JOIN user_address ua on bc.owner_id = ua.user_id
-         INNER JOIN address_type a on ua.type_id = a.address_type_id
-         INNER JOIN fulfillment_type t on t.type_name = a.name
+         INNER JOIN address_type a on ua.address_type_id = a.address_type_id
+         INNER JOIN fulfillment_type t on t.name = a.name
 ON CONFLICT DO NOTHING;

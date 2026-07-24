@@ -37,7 +37,7 @@ VALUES ('SHIPPING'),
 -- Bereitstellungsarten hinzufügen
 -- Es werden die für die Testdaten die Bereitstellungsarten Versand und Abholung angelegt.
 -- Diese sind zur Vereinfachung analog der Adresstypen ausgestaltet.
-INSERT INTO fulfillment_type(type_name)
+INSERT INTO fulfillment_type(name)
 VALUES ('SHIPPING'),
        ('PICK_UP')
 ON CONFLICT DO NOTHING;
