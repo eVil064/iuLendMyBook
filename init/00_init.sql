@@ -565,7 +565,7 @@ CREATE TABLE book_loan
     CONSTRAINT fk_book_loan_copy FOREIGN KEY (book_copy_id) REFERENCES book_copy (book_copy_id),
     CONSTRAINT fk_book_loan_borrowedby FOREIGN KEY (borrowed_by) REFERENCES user_account (user_id),
     CONSTRAINT fk_book_loan_fulfillment FOREIGN KEY (fulfillment_type_id, book_copy_id)
-        REFERENCES book_copy_fulfillment (fulfillment_type_id, copy_id),
+        REFERENCES book_copy_fulfillment (fulfillment_type_id, book_copy_id),
     CONSTRAINT fk_book_loan_user_address FOREIGN KEY (user_address_id) REFERENCES user_address (user_address_id),
     CONSTRAINT fk_book_loan_pickup_option FOREIGN KEY (pickup_option_id) REFERENCES pickup_option (pickup_option_id),
     CONSTRAINT chk_book_loan_returnDate CHECK ( return_date >= loan_date),
