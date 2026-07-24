@@ -10,7 +10,7 @@
 -- Mit Hilfe des CROSS JOINS auf den Adresstypen werden zur Reduktion der Komplexität für jeden Nutzer eine Versand- und
 -- eine Abholadresse angelegt.
 INSERT INTO user_address (user_id,
-                          address_id, type_id)
+                          address_id, address_type_id)
 SELECT DISTINCT u.user_id, a.address_id, a2.address_type_id
 FROM user_raw_data raw
          INNER JOIN user_account u ON raw.email = u.email

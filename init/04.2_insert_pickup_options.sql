@@ -12,7 +12,7 @@ INSERT INTO pickup_option (user_address_id, timeslot_id)
 SELECT ua.user_address_id, ts.timeslot_id
 from user_address ua
          CROSS JOIN (SELECT timeslot_id from timeslot order by random()) ts
-         INNER JOIN address_type a on ua.type_id = a.address_type_id AND a.name = 'PICK_UP'
+         INNER JOIN address_type a on ua.address_type_id = a.address_type_id AND a.name = 'PICK_UP'
 ORDER BY random()
 LIMIT 100
 ON CONFLICT DO NOTHING;
