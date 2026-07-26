@@ -66,7 +66,7 @@ CREATE TABLE language
    erstellt. Die Angaben zu Ländern könnte zwar auch in der Adresse selbst erfolgen, jedoch entspricht dies nicht einen
    konsequenten Normalisierung.
 
-   Für eine effziente Suche und eine konsistente Anzeige sollten beide Felder ('name', 'iso_code') stets gefüllt sein,
+   Für eine effiziente Suche und eine konsistente Anzeige sollten beide Felder ('name', 'iso_code') stets gefüllt sein,
    sodass beide mit einem NOT NULL-Constraint angelegt werden. Zudem ist die Semantik der ISO-Codes vorgegeben und
    kann über einen Check bei Eingabe überprüft werden. Das Prüfkriterium lässt Codes mit 2 Großbuchstaben zu, z.B. US.
 */
@@ -278,7 +278,8 @@ CREATE TABLE book_genre
    Der Status dient der Steuerung der Benutzerzugriffe im Prozess, sodass Benutzer nicht nur aktiv sein, sondern auch gesperrt
    werden können. Initial wird der Status jedes Benutzers über den DEFAULT auf aktiv ('ACTIVE') gesetzt. Da nur zwei Status
    möglich sein sollen und weitere Status nicht vorgesehen sind, wird das Attribut als String und nicht als Nachschlage-Tabelle
-   angelegt. Die zulässigen Ausprägungen werden durch ein Prüfkriterium auf 'ACTIVE' und 'BLOCKER' festgelegt.
+   angelegt. Die zulässigen Ausprägungen werden durch ein Prüfkriterium auf 'ACTIVE' und 'BLOCKER' festgelegt. für eine
+   sinnvolle Überprüfung des Status muss der Wert vorhanden sein und wird daher als Pflichtfeld markiert.
 
    Zudem werden für Telefonnummer und E-Mailadresse Prüfkriterien hinterlegt, die sicherstellen, dass die Eingaben im korrekten
    Format erfolgen. So werden bei Telefonnummern das internationale Format mit Leerzeichen und Bindestrichen (z.B. +1 555-2566-12)
@@ -295,7 +296,7 @@ CREATE TABLE user_account
     last_name      varchar(50)  NOT NULL,
     email          varchar(255) NOT NULL,
     phone          varchar(20),
-    status         varchar(10) DEFAULT 'ACTIVE',
+    status varchar(10) NOT NULL DEFAULT 'ACTIVE',
 
     CONSTRAINT uc_user_email UNIQUE (email),
     CONSTRAINT chk_user_phone CHECK (phone ~ '^[+][0-9 -]+$'),
@@ -541,7 +542,8 @@ CREATE TABLE pickup_option
    Der Status eines neu angelegten Ausleihvorgangs wird durch den DEFAULT-Wert zunächst auf REQUESTED gesetzt.
    Mithilfe eines CHECK-Constraints wird sichergestellt, dass nur die vorgesehenen Status REQUESTED, ON_LOAN,
    RETURNED und CANCELED gespeichert werden können. Ein weiteres CHECK-Constraint verhindert, dass das Rückgabedatum
-   zeitlich vor dem Ausleihdatum liegt.
+   zeitlich vor dem Ausleihdatum liegt. Um den Status jederzeit eindeutig identifizieren zu können, wird dieser
+   zudem mit einem NOT NULL-Constraint versehen, sodass sichergestellt ist, dass dieser stets gefüllt ist.
 
    Da Ausleihvorgänge fachlich relevante historische Daten darastellen, sollten diese nicht automatisch durch das
    kaskadierende Löschen entfernt werden. Vor diesem Hingergrund wird explizit darauf verzichtet. D.h., solange ein
@@ -554,16 +556,16 @@ CREATE TABLE book_loan
 (
     loan_id             bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     book_copy_id        bigint NOT NULL,
-    borrowed_by         bigint NOT NULL,
+    borrower_id bigint      NOT NULL,
     loan_date           date   NOT NULL,
     return_date         date,
-    status              varchar(10) DEFAULT 'REQUESTED',
+    status      varchar(10) NOT NULL DEFAULT 'REQUESTED',
     fulfillment_type_id bigint NOT NULL,
     user_address_id     bigint,
     pickup_option_id    bigint,
 
     CONSTRAINT fk_book_loan_copy FOREIGN KEY (book_copy_id) REFERENCES book_copy (book_copy_id),
-    CONSTRAINT fk_book_loan_borrowedby FOREIGN KEY (borrowed_by) REFERENCES user_account (user_id),
+    CONSTRAINT fk_book_loan_borrowerid FOREIGN KEY (borrower_id) REFERENCES user_account (user_id),
     CONSTRAINT fk_book_loan_fulfillment FOREIGN KEY (fulfillment_type_id, book_copy_id)
         REFERENCES book_copy_fulfillment (fulfillment_type_id, book_copy_id),
     CONSTRAINT fk_book_loan_user_address FOREIGN KEY (user_address_id) REFERENCES user_address (user_address_id),
