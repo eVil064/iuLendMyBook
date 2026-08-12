@@ -22,7 +22,7 @@
 /* Genre-Tabelle (genre)
    ----------------
    Da Bücher mehreren Genres zugeordnet sein können, wird zunächst eine Nachschlagetabelle mit der Bezeichnung (name)
-   des Genres und die eindeutige technischee ID (genre_id). 
+   des Genres und die eindeutige technische ID (genre_id).
    
    Die Bezeichnung des Genres ist erforderlich und wird daher als NOT NULL angelegt. Zudem sollten die Werte in einer 
    Nachschlagetabelle eindeutig sein, um bei Zuordnungen konsistente Ergebnisse sicherzustellen. Daher wird das Attribut
@@ -39,10 +39,10 @@ CREATE TABLE genre
 /* Sprachen-Tabelle (language)
    ----------------
    Für eine zielgerichtet Suche soll die Selektion nach Sprachen möglich sein. Daher wird eine weitere Nachschlagetabelle 
-   erstellt, die die Buchsprachen repräsentiert. Neben der technische ID und der Sprachbezeichnung, wird zudem der
+   erstellt, die die Buchsprachen repräsentiert. Neben der technischen ID und der Sprachbezeichnung, wird zudem der
    ISO-Code der Sprache erfasst.
 
-   Für sinnvolle Verwendung der Sprache, sollten die Felder 'name' und 'iso-code' immer gefüllt sein (NOT NULL Constraint).
+   Für sinnvolle Verwendung der Sprache sollten die Felder 'name' und 'iso-code' immer gefüllt sein (NOT NULL Constraint).
    Um Sprachvarianten unterscheiden zu können, aber dennoch Doppelungen abzusichern werden beide Felder mit einem
    UNIQUE-Constraint belegt. Varianten können somit über einen Zusatz im Feld name, z.B. Englisch (USA) - en-US oder
    Englisch (UK) - en-GB, erstellt werden.
@@ -157,7 +157,12 @@ CREATE TABLE address_type
    Während die Adresse und die Webseite des Verlages optionale Informationen sind, ist die Erfassung des Namens des Verlages Pflicht,
    sodass diese Spalte mit NOT NULL gekennzeichnet wird.
 
-   Die Adresse wird als Fremdschlüsselbeziehung auf die Adress-Tabelle abgebildet.
+   Die Adresse wird als Fremdschlüsselbeziehung auf die Adress-Tabelle abgebildet. Um einen Verlag bei der Anlage oder
+   Zuweisung eines Buches identifizieren zu können, wird festgelegt, dass die Kombination aus Verlagsname und der Adresse
+   als eindeutiges Merkmal verwendet wird. Wird keine Adresse angegeben, so ist die Bezeichnung alleine das eindeutige
+   Merkmal. Daher wird das UNIQUE Constraint um NULLS NOT DISTINCT ergänzt. Andernfalls würde die fehlende Angaben einer
+   Adresse bei gleicher Verlagsbezeichnung einen neuen Eintrag anlegen, auch wenn bereits der gleiche Name ohne Adresse
+   besteht.
 */
 CREATE TABLE publisher
 (
@@ -166,22 +171,26 @@ CREATE TABLE publisher
     website      varchar(255),
     address_id   bigint,
 
+    CONSTRAINT uk_publisher UNIQUE NULLS NOT DISTINCT (name, address_id),
     CONSTRAINT fk_publisher_address FOREIGN KEY (address_id) REFERENCES address (address_id)
 );
-
 
 /* Autoren-Tabelle (author)
    ----------------
    Erstellt eine Tabelle mit Name und Titel von Autoren, um sie den Büchern zuordnen zu können.
    Die Spalte last_name ist als NOT NULL gekennzeichnet, da zumindest der Nachname für eine sinnvolle Zuorndung gefüllt
-   sein sollte. Da die Namen von Autoren oder deren Kombination nicht eindeutig sind, wird auf ein UNIQUE-Constraint verzichtet.
+   sein sollte. Um einen Autoren bei z.B. der Erstellung eines Buches wiederfinden zu können, wird ein zusammengesetztes
+   UNIQUE-Constraint auf alle Tabellenspalten gesetzt. Ein nicht gesetzter akademischer Titel soll nicht implizieren,
+   dass es sich um einen neuen Eintrag handelt, daher wird das Constraint um NULLS NOT DISTINCT ergänzt.
 */
 CREATE TABLE author
 (
     author_id      bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     academic_title varchar(10),
     first_name     varchar(50),
-    last_name      varchar(50) NOT NULL
+    last_name varchar(50) NOT NULL,
+
+    CONSTRAINT uk_author UNIQUE NULLS NOT DISTINCT (academic_title, first_name, last_name)
 );
 
 /* Bücher-Tabelle (book)
@@ -268,6 +277,11 @@ CREATE TABLE book_genre
     CONSTRAINT fk_book_genre_book FOREIGN KEY (book_id) REFERENCES book (book_id)
         ON DELETE CASCADE
 );
+ALTER TABLE book_genre
+    DROP CONSTRAINT fk_book_genre_book
+ALTER TABLE book_genre
+    ADD CONSTRAINT fk_book_genre_book FOREIGN KEY (book_id) REFERENCES book (book_id)
+        ON DELETE CASCADE
 
 /* Benutzer-Tabelle (user_account)
    ------------------
