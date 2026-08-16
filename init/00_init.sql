@@ -277,11 +277,6 @@ CREATE TABLE book_genre
     CONSTRAINT fk_book_genre_book FOREIGN KEY (book_id) REFERENCES book (book_id)
         ON DELETE CASCADE
 );
-ALTER TABLE book_genre
-    DROP CONSTRAINT fk_book_genre_book
-ALTER TABLE book_genre
-    ADD CONSTRAINT fk_book_genre_book FOREIGN KEY (book_id) REFERENCES book (book_id)
-        ON DELETE CASCADE
 
 /* Benutzer-Tabelle (user_account)
    ------------------
