@@ -22,7 +22,7 @@
 /* Genre-Tabelle (genre)
    ----------------
    Da Bücher mehreren Genres zugeordnet sein können, wird zunächst eine Nachschlagetabelle mit der Bezeichnung (name)
-   des Genres und die eindeutige technischee ID (genre_id). 
+   des Genres und die eindeutige technische ID (genre_id).
    
    Die Bezeichnung des Genres ist erforderlich und wird daher als NOT NULL angelegt. Zudem sollten die Werte in einer 
    Nachschlagetabelle eindeutig sein, um bei Zuordnungen konsistente Ergebnisse sicherzustellen. Daher wird das Attribut
@@ -39,10 +39,10 @@ CREATE TABLE genre
 /* Sprachen-Tabelle (language)
    ----------------
    Für eine zielgerichtet Suche soll die Selektion nach Sprachen möglich sein. Daher wird eine weitere Nachschlagetabelle 
-   erstellt, die die Buchsprachen repräsentiert. Neben der technische ID und der Sprachbezeichnung, wird zudem der
+   erstellt, die die Buchsprachen repräsentiert. Neben der technischen ID und der Sprachbezeichnung, wird zudem der
    ISO-Code der Sprache erfasst.
 
-   Für sinnvolle Verwendung der Sprache, sollten die Felder 'name' und 'iso-code' immer gefüllt sein (NOT NULL Constraint).
+   Für sinnvolle Verwendung der Sprache sollten die Felder 'name' und 'iso-code' immer gefüllt sein (NOT NULL Constraint).
    Um Sprachvarianten unterscheiden zu können, aber dennoch Doppelungen abzusichern werden beide Felder mit einem
    UNIQUE-Constraint belegt. Varianten können somit über einen Zusatz im Feld name, z.B. Englisch (USA) - en-US oder
    Englisch (UK) - en-GB, erstellt werden.
@@ -66,7 +66,7 @@ CREATE TABLE language
    erstellt. Die Angaben zu Ländern könnte zwar auch in der Adresse selbst erfolgen, jedoch entspricht dies nicht einen
    konsequenten Normalisierung.
 
-   Für eine effziente Suche und eine konsistente Anzeige sollten beide Felder ('name', 'iso_code') stets gefüllt sein,
+   Für eine effiziente Suche und eine konsistente Anzeige sollten beide Felder ('name', 'iso_code') stets gefüllt sein,
    sodass beide mit einem NOT NULL-Constraint angelegt werden. Zudem ist die Semantik der ISO-Codes vorgegeben und
    kann über einen Check bei Eingabe überprüft werden. Das Prüfkriterium lässt Codes mit 2 Großbuchstaben zu, z.B. US.
 */
@@ -157,7 +157,12 @@ CREATE TABLE address_type
    Während die Adresse und die Webseite des Verlages optionale Informationen sind, ist die Erfassung des Namens des Verlages Pflicht,
    sodass diese Spalte mit NOT NULL gekennzeichnet wird.
 
-   Die Adresse wird als Fremdschlüsselbeziehung auf die Adress-Tabelle abgebildet.
+   Die Adresse wird als Fremdschlüsselbeziehung auf die Adress-Tabelle abgebildet. Um einen Verlag bei der Anlage oder
+   Zuweisung eines Buches identifizieren zu können, wird festgelegt, dass die Kombination aus Verlagsname und der Adresse
+   als eindeutiges Merkmal verwendet wird. Wird keine Adresse angegeben, so ist die Bezeichnung alleine das eindeutige
+   Merkmal. Daher wird das UNIQUE Constraint um NULLS NOT DISTINCT ergänzt. Andernfalls würde die fehlende Angaben einer
+   Adresse bei gleicher Verlagsbezeichnung einen neuen Eintrag anlegen, auch wenn bereits der gleiche Name ohne Adresse
+   besteht.
 */
 CREATE TABLE publisher
 (
@@ -166,22 +171,26 @@ CREATE TABLE publisher
     website      varchar(255),
     address_id   bigint,
 
+    CONSTRAINT uk_publisher UNIQUE NULLS NOT DISTINCT (name, address_id),
     CONSTRAINT fk_publisher_address FOREIGN KEY (address_id) REFERENCES address (address_id)
 );
-
 
 /* Autoren-Tabelle (author)
    ----------------
    Erstellt eine Tabelle mit Name und Titel von Autoren, um sie den Büchern zuordnen zu können.
    Die Spalte last_name ist als NOT NULL gekennzeichnet, da zumindest der Nachname für eine sinnvolle Zuorndung gefüllt
-   sein sollte. Da die Namen von Autoren oder deren Kombination nicht eindeutig sind, wird auf ein UNIQUE-Constraint verzichtet.
+   sein sollte. Um einen Autoren bei z.B. der Erstellung eines Buches wiederfinden zu können, wird ein zusammengesetztes
+   UNIQUE-Constraint auf alle Tabellenspalten gesetzt. Ein nicht gesetzter akademischer Titel soll nicht implizieren,
+   dass es sich um einen neuen Eintrag handelt, daher wird das Constraint um NULLS NOT DISTINCT ergänzt.
 */
 CREATE TABLE author
 (
     author_id      bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     academic_title varchar(10),
     first_name     varchar(50),
-    last_name      varchar(50) NOT NULL
+    last_name varchar(50) NOT NULL,
+
+    CONSTRAINT uk_author UNIQUE NULLS NOT DISTINCT (academic_title, first_name, last_name)
 );
 
 /* Bücher-Tabelle (book)
@@ -278,7 +287,8 @@ CREATE TABLE book_genre
    Der Status dient der Steuerung der Benutzerzugriffe im Prozess, sodass Benutzer nicht nur aktiv sein, sondern auch gesperrt
    werden können. Initial wird der Status jedes Benutzers über den DEFAULT auf aktiv ('ACTIVE') gesetzt. Da nur zwei Status
    möglich sein sollen und weitere Status nicht vorgesehen sind, wird das Attribut als String und nicht als Nachschlage-Tabelle
-   angelegt. Die zulässigen Ausprägungen werden durch ein Prüfkriterium auf 'ACTIVE' und 'BLOCKER' festgelegt.
+   angelegt. Die zulässigen Ausprägungen werden durch ein Prüfkriterium auf 'ACTIVE' und 'BLOCKER' festgelegt. für eine
+   sinnvolle Überprüfung des Status muss der Wert vorhanden sein und wird daher als Pflichtfeld markiert.
 
    Zudem werden für Telefonnummer und E-Mailadresse Prüfkriterien hinterlegt, die sicherstellen, dass die Eingaben im korrekten
    Format erfolgen. So werden bei Telefonnummern das internationale Format mit Leerzeichen und Bindestrichen (z.B. +1 555-2566-12)
@@ -295,7 +305,7 @@ CREATE TABLE user_account
     last_name      varchar(50)  NOT NULL,
     email          varchar(255) NOT NULL,
     phone          varchar(20),
-    status         varchar(10) DEFAULT 'ACTIVE',
+    status varchar(10) NOT NULL DEFAULT 'ACTIVE',
 
     CONSTRAINT uc_user_email UNIQUE (email),
     CONSTRAINT chk_user_phone CHECK (phone ~ '^[+][0-9 -]+$'),
@@ -541,7 +551,8 @@ CREATE TABLE pickup_option
    Der Status eines neu angelegten Ausleihvorgangs wird durch den DEFAULT-Wert zunächst auf REQUESTED gesetzt.
    Mithilfe eines CHECK-Constraints wird sichergestellt, dass nur die vorgesehenen Status REQUESTED, ON_LOAN,
    RETURNED und CANCELED gespeichert werden können. Ein weiteres CHECK-Constraint verhindert, dass das Rückgabedatum
-   zeitlich vor dem Ausleihdatum liegt.
+   zeitlich vor dem Ausleihdatum liegt. Um den Status jederzeit eindeutig identifizieren zu können, wird dieser
+   zudem mit einem NOT NULL-Constraint versehen, sodass sichergestellt ist, dass dieser stets gefüllt ist.
 
    Da Ausleihvorgänge fachlich relevante historische Daten darastellen, sollten diese nicht automatisch durch das
    kaskadierende Löschen entfernt werden. Vor diesem Hingergrund wird explizit darauf verzichtet. D.h., solange ein
@@ -554,16 +565,16 @@ CREATE TABLE book_loan
 (
     loan_id             bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     book_copy_id        bigint NOT NULL,
-    borrowed_by         bigint NOT NULL,
+    borrower_id bigint      NOT NULL,
     loan_date           date   NOT NULL,
     return_date         date,
-    status              varchar(10) DEFAULT 'REQUESTED',
+    status      varchar(10) NOT NULL DEFAULT 'REQUESTED',
     fulfillment_type_id bigint NOT NULL,
     user_address_id     bigint,
     pickup_option_id    bigint,
 
     CONSTRAINT fk_book_loan_copy FOREIGN KEY (book_copy_id) REFERENCES book_copy (book_copy_id),
-    CONSTRAINT fk_book_loan_borrowedby FOREIGN KEY (borrowed_by) REFERENCES user_account (user_id),
+    CONSTRAINT fk_book_loan_borrowerid FOREIGN KEY (borrower_id) REFERENCES user_account (user_id),
     CONSTRAINT fk_book_loan_fulfillment FOREIGN KEY (fulfillment_type_id, book_copy_id)
         REFERENCES book_copy_fulfillment (fulfillment_type_id, book_copy_id),
     CONSTRAINT fk_book_loan_user_address FOREIGN KEY (user_address_id) REFERENCES user_address (user_address_id),
