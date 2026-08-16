@@ -38,41 +38,42 @@ Bla Bla Context
 
 # Testing
 
-## Testfälle definieren
+## Prozeduren installieren
+
+Zur Installation der Prozeduren auf der Datenbank sind die SQL-Dateien im Ordner `/test/procedures/*` auszuführen.
+
+## Testfälle ausführen
+
+Die Testfälle sind im
 
 ### Benutzerverwaltung
 
-| # | Bezeichnung          | Beschreibung | Erwartetes Ergebnis | Prozedur | 
-|---|----------------------|--------------|---------------------|----------|
-| 1 | Anlegen eines Buches | asd          | asd                 | asd      |
-|   | Ändern eines Buches  | asd          | asd                 | asd      |
-|   | Löschen eines Buches | asd          | asd                 | ad       |
+| # | Bezeichnung          | Beschreibung | Erwartetes Ergebnis | Prozeduraufruf | 
+|---|----------------------|--------------|---------------------|----------------|
+| 1 | Anlegen eines Buches | asd          | asd                 | `createBook    |
+|   | Ändern eines Buches  | asd          | asd                 | asd            |
+|   | Löschen eines Buches | asd          | asd                 | ad             |
 
 ### Stammdatenverwaltung
 
-| # | Bezeichnung          | Beschreibung | Erwartetes Ergebnis | Prozedur | 
-|---|----------------------|--------------|---------------------|----------|
-| 1 | Anlegen eines Buches | asd          | asd                 | asd      |
-|   | Ändern eines Buches  | asd          | asd                 | asd      |
-|   | Löschen eines Buches | asd          | asd                 | ad       |
+| # | Bezeichnung          | Beschreibung | Erwartetes Ergebnis | Prozeduraufruf | 
+|---|----------------------|--------------|---------------------|----------------|
+| 1 | Anlegen eines Buches | asd          | asd                 | asd            |
+|   | Ändern eines Buches  | asd          | asd                 | asd            |
+|   | Löschen eines Buches | asd          | asd                 | ad             |
 
 ### Bücher (Bibliografie und Stammdaten)
 
-| # | Bezeichnung          | Beschreibung | Erwartetes Ergebnis | Prozedur | 
-|---|----------------------|--------------|---------------------|----------|
-| 1 | Anlegen eines Buches | asd          | asd                 | asd      |
-|   | Ändern eines Buches  | asd          | asd                 | asd      |
-|   | Löschen eines Buches | asd          | asd                 | ad       |
+| # | Bezeichnung          | Beschreibung | Erwartetes Ergebnis | Prozeduraufruf | 
+|---|----------------------|--------------|---------------------|----------------|
+| 1 | Anlegen eines Buches | asd          | asd                 | asd            |
+|   | Ändern eines Buches  | asd          | asd                 | asd            |
+|   | Löschen eines Buches | asd          | asd                 | ad             |
 
 ### Ausleihvorgänge
 
-| # | Bezeichnung          | Beschreibung | Erwartetes Ergebnis | Prozedur | 
-|---|----------------------|--------------|---------------------|----------|
-| 1 | Anlegen eines Buches | asd          | asd                 | asd      |
-|   | Ändern eines Buches  | asd          | asd                 | asd      |
-|   | Löschen eines Buches | asd          | asd                 | ad       |
-
-## Tests ausführen (Prozeduraufrufe)
-
-Für jede Funktion der Datenbank ist eine Prozedur vorhanden. Die Testfälle können durch Ausführung der Prozeduren
-abgeprüft werden
+| # | Bezeichnung          | Beschreibung | Erwartetes Ergebnis | Prozeduraufruf | 
+|---|----------------------|--------------|---------------------|----------------|
+| 1 | Anlegen eines Buches | asd          | asd                 | asd            |
+|   | Ändern eines Buches  | asd          | asd                 | asd            |
+|   | Löschen eines Buches | asd          | asd                 | ad             |
