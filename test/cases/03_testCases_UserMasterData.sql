@@ -25,8 +25,15 @@ CALL createUserAddress(getUserByEMail('c.steffen@gmail.com'),
 CALL createUserAddress(getUserByEMail('c.steffen@gmail.com'),
                        getAddress('Alexanderplatz', '1', '10178', 'Berlin', 'DE'),
                        'PICK_UP', NULL);
--- 03.2.4 Löschen eines Benutzers (löscht auch Benutzer-Adress-Zuordnung, ohne Fehler)
-SELECT deleteUserAccountAndCheckAddresses('c.steffen@gmail.com');
 
-
-
+-- 03.3 Rollenmanagement
+---------------------------
+-- 03.3.1 Anlegen einer Rolle
+INSERT INTO role (name)
+VALUES ('New role');
+-- 03.3.2 Löschen einer Rolle als User
+SELECT deleterole('New role', getuserbyemail('max.meier@web.de'));
+-- 03.3.3 Löschen einer Rolle als Admin
+SELECT deleterole('New role', findadminuser());
+-- 03.3.3 Löschen einer Rolle als Admin; Erfolgreich, da Zuordnung user_role kaskadierend mitgelöscht wird
+SELECT deleterole('MISC', findadminuser());

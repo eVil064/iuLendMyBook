@@ -11,9 +11,9 @@ CALL getOrCreatePublisher('Das Verlagshaus', 'http://dasverlagshaus.de', NULL,
                           NULL, NULL, NULL, NULL, NULL);
 
 CALL getOrCreatePublisher('Der Verlag', 'http://dasverlagshaus.info', 'Waldstrasse',
-                          '27', 'Leipzig', '04109', 'Deutschland', NULL);
+                          '27', 'Leipzig', '04109', 'Germany', NULL);
 -- 02.1.4 Prüfung referentielle Integrietät: Löschen des Verlags löscht nicht die Adresse
-SELECT deletepublisherandcheckaddress('Das Verlagshaus');
+SELECT deletepublisherandcheckaddress('Der Verlag');
 
 -- 02.2 Autoren
 ---------------------------

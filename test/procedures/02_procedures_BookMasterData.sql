@@ -209,5 +209,25 @@ EXCEPTION
         RAISE NOTICE 'Book may not be deleted. At least one copy is referenced';
 
 END;
-$$
+$$;
 
+/* Diese Funktion überprüft, dass durch das Löschen eines Verlags nicht kaskadierend die Adresse gelöscht wird, da diese
+   einem weiteren Verlag oder einem Benutzer zugeordnet sein kann,
+ */
+CREATE OR REPLACE FUNCTION deletePublisherAndCheckAddress(p_name varchar(255))
+    RETURNS TABLE
+            (
+                address_id     BIGINT,
+                publisher_name varchar
+            )
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    RETURN QUERY WITH deleted_publishers AS
+                          (DELETE FROM publisher p WHERE p.name = p_name AND p.address_id IS NOT NULL RETURNING p.address_id, p.name)
+                 SELECT a.address_id, dp.name
+                 from address a
+                          INNER JOIN deleted_publishers dp on a.address_id = dp.address_id;
+END;
+$$;

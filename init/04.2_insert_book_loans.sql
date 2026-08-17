@@ -16,7 +16,7 @@
 -- Als Ausleihdatum wird ein beliebiger Wert gesetzt. Dieser wird anhand des aktuellen Datums und einem Versatz ermittelt.
 -- Dieser Versatz wird in Tagen angebenen (INTERVAL '1 day') und mit einer Zufallszahl von 1 - 60 multipliziert. Somit
 -- wird ein Datum in den letzten 60 Tagen ermittelt
-INSERT INTO book_loan (copy_id, borrowed_by, loan_date, fulfillment_type_id, user_address_id)
+INSERT INTO book_loan (book_copy_id, borrower_id, loan_date, fulfillment_type_id, user_address_id)
 SELECT bc.book_copy_id,
        u.user_id,
        Current_date - (floor(random() * 60) + 1) * INTERVAL '1 day',
@@ -28,7 +28,7 @@ from book_copy bc
          CROSS JOIN user_account u
          INNER JOIN user_address ua on u.user_id = ua.user_id
          INNER JOIN address_type t2 on ua.address_type_id = t2.address_type_id AND t2.name = 'SHIPPING'
-WHERE t.name = 'SHIPPING'
+WHERE t.type_name = 'SHIPPING'
   and u.user_id in (SELECT user_id from user_account order by random() LIMIT 5);
 
 -- Erstellung von Ausleihvorgängen über die die Bereitstellungsart 'Abholung'
@@ -45,7 +45,7 @@ WHERE t.name = 'SHIPPING'
 -- Als Ausleidatum wird ein beliebiger Wert gesetzt. Dieser wird anhand des aktuellen Datums und einem Versatz ermittelt.
 -- Dieser Versatz wird in Tagen angebenen (INTERVAL '1 day') und mit einer Zufallszahl von 1 - 60 multipliziert. Somit
 -- wird ein Datum in den letzten 60 Tagen ermittelt
-INSERT INTO book_loan (copy_id, borrowed_by, loan_date, fulfillment_type_id, pickup_option_id)
+INSERT INTO book_loan (book_copy_id, borrower_id, loan_date, fulfillment_type_id, pickup_option_id)
 SELECT bc.book_copy_id,
        u.user_id,
        Current_date - (floor(random() * 60) + 1) * INTERVAL '1 day',

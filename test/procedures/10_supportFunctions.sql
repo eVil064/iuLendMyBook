@@ -88,6 +88,20 @@ BEGIN
 END;
 $$;
 
+-- Prüft, ob User ein Admin ist
+CREATE OR REPLACE FUNCTION isAdmin(p_user_id BIGINT) RETURNS BOOLEAN
+    LANGUAGE plpgsql AS
+$$
+BEGIN
+    RETURN EXISTS (SELECT 1
+                   from user_account ua
+                            INNER JOIN user_role ur on ua.user_id = ur.user_id
+                            INNER JOIN role r on ur.role_id = r.role_id
+                   WHERE r.name = 'ADMIN'
+                     and ua.user_id = p_user_id);
+END;
+$$;
+
 -- Ermittelt ein Buch anhand der ISBN
 CREATE OR REPLACE FUNCTION getBookByISBN(p_isbn varchar(13)) RETURNS BIGINT
     LANGUAGE plpgsql AS
@@ -97,21 +111,6 @@ DECLARE
 BEGIN
     SELECT book_id INTO v_book_id FROM book WHERE isbn = p_isbn;
     RETURN v_book_id;
-END;
-$$;
-
-
-/* Diese Funktion überprüft, dass durch das Löschen eines Verlags nicht kaskadierend die Adresse gelöscht wird, da diese
-   einem weiteren Verlag oder einem Benutzer zugeordnet sein kann,
- */
-CREATE OR REPLACE FUNCTION deletePublisherAndCheckAddress(p_name varchar(255)) RETURNS INTEGER
-    LANGUAGE plpgsql AS
-$$
-DECLARE
-    v_address_id BIGINT;
-BEGIN
-    DELETE FROM publisher WHERE name = p_name AND address_id IS NOT NULL RETURNING address_id INTO v_address_id;
-    RETURN (SELECT count(address_id) from address where address_id = v_address_id);
 END;
 $$;
 
@@ -146,27 +145,28 @@ BEGIN
 END;
 $$;
 
-/* Diese Funktion löscht einen User und überprüft, dass in der Adress-Zuordnungs-Tabelle kein Eintrag zum
-   User mehr vorhanden ist.
- */
-CREATE OR REPLACE FUNCTION deleteUserAccountAndCheckAddresses(p_email varchar(255)) RETURNS INTEGER
+
+-- Ermittelt die Bereitstellungsart anhand der Bezeichnung
+CREATE OR REPLACE FUNCTION getFulfillmentTypID(p_name varchar(10)) RETURNS BIGINT
+    LANGUAGE plpgsql AS
+$$
+BEGIN
+    RETURN (SELECT fulfillment_type_id FROM fulfillment_type WHERE type_name = p_name LIMIT 1);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION getDistanceKM(p_current_latitude numeric(9, 6), p_current_longitude numeric(9, 6),
+                                         p_latitude numeric(9, 6), p_longitude numeric(9, 6)) RETURNS numeric
     LANGUAGE plpgsql AS
 $$
 DECLARE
-    v_user_id BIGINT;
 BEGIN
-    v_user_id := getUserByEmail(p_email);
-    DELETE FROM user_account WHERE user_id = v_user_id;
-    RETURN (SELECT count(user_id) from user_address where user_id = v_user_id);
+    RETURN 6371 * acos(cos(radians(p_current_latitude))
+                           * cos(radians(p_latitude))
+                           * cos(radians(p_longitude) - radians(p_current_longitude))
+        + sin(radians(p_current_latitude))
+                           * sin(radians(p_latitude)));
 END;
 $$;
 
-
--- Ermittelt ein Buchexemplar anhand der Buch-ID und der ID des Owners
-CREATE OR REPLACE FUNCTION getBookCopy(p_book_id BIGINT, p_user_id BIGINT) RETURNS BIGINT
-    LANGUAGE plpgsql AS
-$$
-BEGIN
-    RETURN (SELECT book_copy_id FROM book_copy WHERE owner_id = p_user_id and book_id = p_book_id);
-END;
-$$;
+DROP FUNCTION getDistanceKM

@@ -45,6 +45,9 @@ BEGIN
 END;
 $$;
 
+/* Ordnet einem Benutzer unter Angabe der Benutzer-ID, Adress-ID und des Adresstyps eine Adresse zu und gibt die
+   ID des erzeugten Eintrags zurück.
+*/
 CREATE OR REPLACE PROCEDURE createUserAddress(p_user_id BIGINT, p_address_id BIGINT, p_address_type varchar(10),
                                               OUT p_user_address_id BIGINT)
     LANGUAGE plpgsql AS
@@ -61,4 +64,47 @@ BEGIN
 END;
 $$;
 
-CALL getOrCreateUserAccount('Manfred Mitarbeiter', 'manni@mitarbieter.de', NULL, NULL)
+-- Diese Funktion löscht einen User
+CREATE OR REPLACE FUNCTION deleteUserAccount(p_email varchar(255)) RETURNS INTEGER
+    LANGUAGE plpgsql AS
+$$
+DECLARE
+    v_user_id BIGINT;
+BEGIN
+    DELETE
+    FROM user_account
+    WHERE user_id = getUserByEmail(p_email)
+    RETURNING user_id INTO v_user_id;
+    RETURN v_user_id;
+END;
+$$;
+
+-- Prüft nach dem Löschen eines Users, ob es noch Exemplare des Users gibt. Falls nicht, wird ein leeres Ergebnis zurückggeeben
+CREATE OR REPLACE FUNCTION deleteUserAndCheckCopies(p_email varchar(255))
+    RETURNS TABLE
+            (
+                address_id BIGINT
+            )
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    RETURN QUERY SELECT book_copy_id FROM book_copy WHERE owner_id = deleteUserAccount(p_email);
+END;
+$$;
+
+-- Löscht eine Rolle anhand der Bezeichnung, nur zulässig, wenn der User die Admin-Rolle inne hat
+CREATE OR REPLACE FUNCTION deleteRole(p_role varchar(50), p_user_id BIGINT) RETURNS BOOLEAN
+    LANGUAGE plpgsql AS
+$$
+BEGIN
+    IF isAdmin(p_user_id) THEN
+        DELETE from role where name = p_role;
+        RAISE NOTICE 'Role successfully deleted';
+        RETURN TRUE;
+    ELSE
+        RAISE NOTICE 'You are not allowed to delete a role';
+        RETURN FALSE;
+    END IF;
+END;
+$$;
