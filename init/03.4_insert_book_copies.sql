@@ -25,5 +25,5 @@ SELECT bc.book_copy_id, t.fulfillment_type_id
 FROM book_copy bc
          INNER JOIN user_address ua on bc.owner_id = ua.user_id
          INNER JOIN address_type a on ua.address_type_id = a.address_type_id
-         INNER JOIN fulfillment_type t on t.type_name = a.name
+         INNER JOIN fulfillment_type t on t.name = a.name
 ON CONFLICT DO NOTHING;

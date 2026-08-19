@@ -1,85 +1,73 @@
 /* Es erfolgt die Anlage beliebiger und fiktiver Ausleihdaten
-   - Erstellung zufälliger Ausleihvorgänge für vorhandene Buchexemplare mit der Bereitstellungsart 'Versand'
-   - Erstellung zufälliger Ausleihvorgänge für vorhandene Buchexemplare mit der Bereitstellungsart 'Abholung'
-   - Aktualisierung der Ausleihdaten
+   - Erstellung zufälliger Ausleihvorgänge für vorhandene Buchexemplare
 */
 ------------------------------------------------------------------------------------------------------------------------
+/* Zufällige Erstellung von Ausleihvorgängen über die Bereitstellungsarten 'Abholung' und 'Versand':
+   Als Grundlage zur Erstellung der Ausleihvorgänge werden zunächst relevante Buchexemplare 'relevant_copies' selektiert.
+   Dafür werden per random() und LIMIT 25 zufällige Exemplare ausgewählt. Mit floor(random()) wird zufällig die Anzahl
+   der zu erstellenden Ausleihvorgänge je Exemplar festgelegt.
 
--- Erstellung von Ausleihvorgängen über die die Bereitstellungsart 'Versand'
--- Über den CROSS JOIN wird eine Kreuztabelle erstellt, in der für jede Kombination aus book_copy und
--- user_account ein Eintrag erstellt wird. Damit es nicht zu viele Datensätze werden, werden über die 'random()'-Funktion
--- in Kombination LIMIT 5 beliebige User-IDs ermittelt und die Ergebnismenge darauf eingeschränkt. Des Weiteren werden
--- über den Adresstypen nur User-IDs ermittelt, die auch eine Versandadresse besitzen.
+   Im zweiten Schritt werden in der Abfrage 'loans_to_insert' die konkreten Datensätze zum Einfügen in die Tabelle 'book_loan'
+   berechnet. Hierzu wird aus den ermittelten Exemplaren und den Benutzeraccounts (user_account) über ein CROSS JOIN eine
+   Kreuztabelle erstellt, die für jede Kombination aus beiden Tabellen einen Datensatz erzeugt. Um ausschließlich die zuvor
+   festgelegte Anzahl an Datensätzen zu erzeugen, wird über das Schlüsselwort LATERAL nicht die Tabelle der Benutzer-Accounts
+   verknüpft, sondern eine Unterabfrage. Diese selektiert nur jene User, die nicht gleich dem Eigentümer des Exemplars sind
+   (um Leihvorgänge an sich selbst zuunterbinden) und für die eine Benutzeradresse mit dem Adresstyp besteht, der als
+   Bereitstellungart für das Exemplar angegeben ist. Durch das LIMIT sichergestellt, dass je Exemplar die zuvor ermittelte
+   Anzahl der Vorgänge resultiert. Für die einzufügenden Vorgänge, bei denen die Abholung als Option hinterlegt ist
+   wird für jeden Vorgang dieser Buchungsart zufällig eine Abholoption ermittelt. Die Funktion 'row_number' fügt zudem
+   eine weitere Spalte ein, die basierend auf der ID des Exemplars die Zeilennummer zurückggibt.
 
--- Die Menge der Buchexemplare ist über die WHERE-Bedinung auf die Einträge beschränkt, die auch zum Versand angeboten werden.
+   Abschließend werden die so erzeugten Datensätze in die Tabelle 'book_loan' eingefügt. Anhand der Zeilennummer eines
+   Vorgangs werden über das Attribut 'loan_duration_days' das loan_date und das return_date des Vorgangs ermittelt. Die
+   Funktion random() steuert hier, wie lange der einzelne Ausleivorgang gedauert hat. Es wird dabei davon ausgegangen,
+   dass für die Testdaten alle Vorgänge innerhalb der Leihfrist abgeschlossen wurden und keine Vorgänge offen sind.
+   */
+WITH relevant_copies AS (SELECT bc.owner_id,
+                                bc.book_copy_id,
+                                loan_duration_days,
+                                ft.name,
+                                ft.fulfillment_type_id,
+                                floor(random() * 3) + 1 as no_loans
+                         FROM book_copy bc
+                                  INNER JOIN book_copy_fulfillment bcf on bc.book_copy_id = bcf.book_copy_id
+                                  INNER JOIN fulfillment_type ft on bcf.fulfillment_type_id = ft.fulfillment_type_id
+                         ORDER BY random()
+                         LIMIT 25),
+     loans_to_insert AS (SELECT book_copy_id,
+                                borrower.user_id,
+                                rc.fulfillment_type_id,
+                                CASE WHEN rc.name = 'SHIPPING' THEN user_address_id END address_id,
+                                pickup_option_id,
+                                loan_duration_days,
+                                row_number() over (partition by book_copy_id)           row
+                         FROM relevant_copies rc
+                                  CROSS JOIN LATERAL (SELECT u.user_id, a.user_address_id
+                                                      FROM user_account u
+                                                               INNER JOIN user_address a on u.user_id = a.user_id
+                                                               INNER JOIN address_type t on a.address_type_id = t.address_type_id
+                                                      WHERE u.user_id <> rc.owner_id
+                                                        AND t.name = rc.name
+                                                      order by random()
+                                                      LIMIT rc.no_loans) borrower
+                                  LEFT JOIN LATERAL (SELECT pickup_option_id
+                                                     from pickup_option po
+                                                              INNER JOIN user_address ua on po.user_address_id = ua.user_address_id
+                                                     WHERE ua.user_id = rc.owner_id
+                                                       and rc.name = 'PICK_UP'
+                                                     ORDER BY random()
+                                                     LIMIT 1) pickup on true)
 
--- Als Ausleihdatum wird ein beliebiger Wert gesetzt. Dieser wird anhand des aktuellen Datums und einem Versatz ermittelt.
--- Dieser Versatz wird in Tagen angebenen (INTERVAL '1 day') und mit einer Zufallszahl von 1 - 60 multipliziert. Somit
--- wird ein Datum in den letzten 60 Tagen ermittelt
-INSERT INTO book_loan (book_copy_id, borrower_id, loan_date, fulfillment_type_id, user_address_id)
-SELECT bc.book_copy_id,
-       u.user_id,
-       Current_date - (floor(random() * 60) + 1) * INTERVAL '1 day',
-       t.fulfillment_type_id,
-       ua.user_address_id
-from book_copy bc
-         INNER JOIN book_copy_fulfillment bcf on bc.book_copy_id = bcf.book_copy_id
-         INNER JOIN fulfillment_type t on bcf.fulfillment_type_id = t.fulfillment_type_id
-         CROSS JOIN user_account u
-         INNER JOIN user_address ua on u.user_id = ua.user_id
-         INNER JOIN address_type t2 on ua.address_type_id = t2.address_type_id AND t2.name = 'SHIPPING'
-WHERE t.type_name = 'SHIPPING'
-  and u.user_id in (SELECT user_id from user_account order by random() LIMIT 5);
-
--- Erstellung von Ausleihvorgängen über die die Bereitstellungsart 'Abholung'
--- Über den CROSS JOIN wird eine Kreuztabelle erstellt, in der für jede Kombination aus book_copy und
--- user_account ein Eintrag erstellt wird. Damit es nicht zu viele Datensätze werden, werden über die 'random()'-Funktion
--- in Kombination LIMIT 5 beliebige User-IDs ermittelt und die Ergebnismenge darauf eingeschränkt.
-
--- Die Menge der Buchexemplare ist über die WHERE-Bedinung auf die Einträge beschränkt, die auch zum Versand angeboten werden.
--- Zudem wird im JOIN auch darauf geachtet, dass der Besitzer auch eine Abholadresse besitzt.
--- Durch den LATERAL JOIN auf die 'pickup_option' wird nur die erste gefundene Option ermittelt, da ein Verleiher mehrere
--- Abholoptionen anbieten kann, in der Ausleihe aber nur eine gewählt werden kann. In den Testdaten wird daher zwar
--- zufällig ein Slot ausgewählt, jedoch ist dieser für alle Inhalte gleich.
-
--- Als Ausleidatum wird ein beliebiger Wert gesetzt. Dieser wird anhand des aktuellen Datums und einem Versatz ermittelt.
--- Dieser Versatz wird in Tagen angebenen (INTERVAL '1 day') und mit einer Zufallszahl von 1 - 60 multipliziert. Somit
--- wird ein Datum in den letzten 60 Tagen ermittelt
-INSERT INTO book_loan (book_copy_id, borrower_id, loan_date, fulfillment_type_id, pickup_option_id)
-SELECT bc.book_copy_id,
-       u.user_id,
-       Current_date - (floor(random() * 60) + 1) * INTERVAL '1 day',
-       t.fulfillment_type_id,
-       pu.pickup_option_id
-from book_copy bc
-         INNER JOIN book_copy_fulfillment bcf on bc.book_copy_id = bcf.book_copy_id
-         INNER JOIN fulfillment_type t on bcf.fulfillment_type_id = t.fulfillment_type_id
-         INNER JOIN user_address ua on bc.owner_id = ua.user_id
-         INNER JOIN address_type t2 on ua.address_type_id = t2.address_type_id AND t2.name = 'PICK_UP'
-         INNER JOIN LATERAL (
-    SELECT po.pickup_option_id
-    FROM pickup_option po
-    WHERE po.user_address_id = ua.user_address_id
-    ORDER BY random()
-    LIMIT 1
-    ) pu ON TRUE
-         CROSS JOIN user_account u
-WHERE t.name = 'PICK_UP'
-  and u.user_id in (SELECT user_id from user_account order by random() LIMIT 5);
-
--- Aktualisierung der Ausleihdaten
--- Ausgehend davon, dass die Bücher immer in der vorgesehenen Ausleihzeit zurückgegeben werden, wird auf Basis des
--- Ausleihdatums und der Leihdauer das Rückgabedatum berechnet. Für eine realistischere Darstellung wird per 'random()'
--- eine anteilge Ausleihzeit berechet.
--- Liegt das errechnete Datum vor dem aktuellen Datum, wird das Datum als 'return_date' persistiert und der Status auf
--- 'RETURNED' gesetzt. Falls nicht, wird der Status 'ON_LOAN' gesetzt und das Rückgabedatum bleibt offen.
-UPDATE book_loan l
-SET return_date = CASE
-                      WHEN CURRENT_DATE > l.loan_date + floor(random() * bc.loan_duration_days) * INTERVAL '1 day' THEN
-                          l.loan_date + floor(random() * bc.loan_duration_days) * INTERVAL '1 day' END,
-    status      = CASE
-                      WHEN CURRENT_DATE > l.loan_date + floor(random() * bc.loan_duration_days) * INTERVAL '1 day'
-                          THEN 'RETURNED'
-                      ELSE 'ON_LOAN' END
-FROM book_copy bc
-WHERE bc.book_copy_id = l.copy_id;
+INSERT
+INTO book_loan (book_copy_id, borrower_id, loan_date, return_date, status, fulfillment_type_id, user_address_id,
+                pickup_option_id)
+SELECT book_copy_id,
+       user_id,
+       current_date - row * (loan_duration_days) * INTERVAL '1 day' AS loan_date,
+       current_date - row * (loan_duration_days) * INTERVAL '1 day' +
+       random() * loan_duration_days * INTERVAL '1 day',
+       'RETURNED',
+       fulfillment_type_id,
+       address_id,
+       pickup_option_id
+FROM loans_to_insert;

@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS book_raw_data
     description     text,
     publishing_date date,
     edition         smallint,
-    language        char(2),
+    language char(5),
     genre           varchar(50)
 );
 

@@ -151,7 +151,7 @@ CREATE OR REPLACE FUNCTION getFulfillmentTypID(p_name varchar(10)) RETURNS BIGIN
     LANGUAGE plpgsql AS
 $$
 BEGIN
-    RETURN (SELECT fulfillment_type_id FROM fulfillment_type WHERE type_name = p_name LIMIT 1);
+    RETURN (SELECT fulfillment_type_id FROM fulfillment_type t WHERE t.name = p_name LIMIT 1);
 END;
 $$;
 

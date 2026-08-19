@@ -20,7 +20,6 @@ BEGIN
 END;
 $$;
 
-
 /* Diese Prozedur aktualisiert einen User-Account anhand der E-Mailadresse. Dazu wird zunächst mit der Prozedur
    getOrCreateUserAccount ein bestehender Account ermittelt oder bei Bedarf neu angelegt.
    Im Anschluss werden die Daten aktualisiert, sofern notwendig.

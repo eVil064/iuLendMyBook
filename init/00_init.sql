@@ -390,10 +390,6 @@ CREATE TABLE book_copy
     CONSTRAINT chk_book_copy_duration CHECK (loan_duration_days > 0)
 );
 
-ALTER TABLE book_copy
-    ADD CONSTRAINT fk_book_copy_owner FOREIGN KEY (owner_id) REFERENCES user_account (user_id)
-        ON DELETE CASCADE;
-
 /* Bereitstellungsart-Tabelle (book_copy)
    ----------------------
    Während des Ausleihprozesses stehen mehrere Möglichkeiten für die Bereitstellung der Exemplare zur Verfügung (Versand, Abholung).
