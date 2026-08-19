@@ -82,7 +82,7 @@ VALUES (5, 7, NULL);
 INSERT INTO loan_rating (loan_id, rating_score, comment)
 VALUES (5, 3, NULL);
 
--- 05.4.3 Anonyme Auswertung des Durchschnitts der abgegebenen Bewertungen je Buchtitel
+-- 05.4.4 Anonyme Auswertung des Durchschnitts der abgegebenen Bewertungen je Buchtitel
 SELECT formatisbn(b.isbn)                   ISBN,
        b.title,
        count(lr.rating_id)                  no_of_ratings,
