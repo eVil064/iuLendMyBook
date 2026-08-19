@@ -47,5 +47,6 @@ ON CONFLICT DO NOTHING;
 INSERT INTO role(name)
 VALUES ('USER'),
        ('ADMIN'),
-       ('MODERATOR')
+       ('MODERATOR'),
+       ('MISC')
 ON CONFLICT DO NOTHING;
