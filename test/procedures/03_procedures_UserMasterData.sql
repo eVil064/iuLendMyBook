@@ -103,8 +103,7 @@ BEGIN
         RAISE NOTICE 'Role successfully deleted';
         RETURN TRUE;
     ELSE
-        RAISE NOTICE 'You are not allowed to delete a role';
-        RETURN FALSE;
+        RAISE EXCEPTION 'You are not allowed to delete a role';
     END IF;
 END;
 $$;

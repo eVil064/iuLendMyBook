@@ -15,7 +15,7 @@ BEGIN
 EXCEPTION
     WHEN unique_violation THEN
         SELECT genre_id INTO p_id from genre g WHERE g.name = p_name;
-        RAISE NOTICE 'Genre already exists. Return ID %', p_id;
+        RAISE EXCEPTION 'Genre already exists. Return ID %', p_id;
 END;
 $$;
 
@@ -36,7 +36,7 @@ BEGIN
 EXCEPTION
     WHEN unique_violation THEN
         SELECT language_id INTO p_id from language l WHERE l.name = p_name or l.iso_code = p_isoCode;
-        RAISE NOTICE 'Language already exists. Return ID: %', p_id;
+        RAISE EXCEPTION 'Language already exists. Return ID: %', p_id;
 END;
 $$;
 
@@ -57,7 +57,7 @@ BEGIN
 EXCEPTION
     WHEN unique_violation THEN
         SELECT country_id INTO p_id from country c WHERE c.iso_code = p_iso_code;
-        RAISE NOTICE 'ISO-Code already exists. Return ID: %', p_id;
+        RAISE EXCEPTION 'ISO-Code already exists. Return ID: %', p_id;
 END;
 $$;
 

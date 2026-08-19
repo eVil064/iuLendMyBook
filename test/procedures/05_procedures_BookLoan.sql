@@ -47,7 +47,7 @@ $$;
    erzeugt. Sofern das Exemplar nicht verfügbar ist, wird ein Fehler ausgegeben.
  */
 CREATE OR REPLACE PROCEDURE createBookLoan(p_copy_id BIGINT, p_borrower_id BIGINT, p_pickup_time time,
-                                           p_pickup_day smallint, OUT p_loan_id BIGINT)
+                                           p_pickup_day INTEGER, OUT p_loan_id BIGINT)
     LANGUAGE plpgsql AS
 $$
 DECLARE
@@ -116,7 +116,7 @@ BEGIN
     RETURNING bl.loan_id INTO v_loan_id;
 
     IF v_loan_id IS NULL THEN
-        RAISE NOTICE 'Loan could not be updated. Loan id was not found';
+        RAISE EXCEPTION 'Loan could not be updated. Loan id % was not found', v_loan_id;
     ELSE
         RAISE NOTICE 'Book loan with ID % was successfully updated', v_loan_id;
     END IF;

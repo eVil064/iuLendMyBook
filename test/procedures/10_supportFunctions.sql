@@ -155,18 +155,25 @@ BEGIN
 END;
 $$;
 
+-- Ermittelt die Entfernung zwischen 2 geografischen Punkten in Kilometern und rundet auf 2 Nachkommastellen
 CREATE OR REPLACE FUNCTION getDistanceKM(p_current_latitude numeric(9, 6), p_current_longitude numeric(9, 6),
-                                         p_latitude numeric(9, 6), p_longitude numeric(9, 6)) RETURNS numeric
+                                         p_latitude numeric(9, 6), p_longitude numeric(9, 6)) RETURNS numeric(9, 2)
     LANGUAGE plpgsql AS
 $$
-DECLARE
 BEGIN
-    RETURN 6371 * acos(cos(radians(p_current_latitude))
+    RETURN round(6371 * acos(cos(radians(p_current_latitude))
                            * cos(radians(p_latitude))
                            * cos(radians(p_longitude) - radians(p_current_longitude))
         + sin(radians(p_current_latitude))
-                           * sin(radians(p_latitude)));
+                                 * sin(radians(p_latitude)))::numeric, 2);
 END;
 $$;
 
-DROP FUNCTION getDistanceKM
+CREATE OR REPLACE FUNCTION formatISBN(p_isbn varchar(13)) RETURNS varchar
+    LANGUAGE plpgsql AS
+$$
+BEGIN
+    RETURN CONCAT(left(p_isbn, 3), '-', substr(p_isbn, 4, 1), '-', substr(p_isbn, 5, 2), '-', substr(p_isbn, 7, 6), '-',
+                  substr(p_isbn, 13, 1));
+END;
+$$;

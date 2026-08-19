@@ -189,7 +189,7 @@ $$
 BEGIN
 
     IF getBookByIsbn(p_isbn) IS NULL THEN
-        RAISE NOTICE 'Book with ISBN % cannot be deleted as it does not exist', p_isbn;
+        RAISE EXCEPTION 'Book with ISBN % cannot be deleted as it does not exist', p_isbn;
     ELSE
         IF NOT EXISTS (SELECT 1
                        FROM user_account ua
@@ -206,7 +206,7 @@ BEGIN
 
 EXCEPTION
     WHEN foreign_key_violation THEN
-        RAISE NOTICE 'Book may not be deleted. At least one copy is referenced';
+        RAISE EXCEPTION 'Book may not be deleted. At least one copy is referenced';
 
 END;
 $$;

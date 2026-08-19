@@ -622,7 +622,6 @@ CREATE TABLE loan_rating
     CONSTRAINT fk_loan_rating_loan FOREIGN KEY (loan_id) REFERENCES book_loan (loan_id)
         ON DELETE CASCADE,
     CONSTRAINT chk_loan_rating_score CHECK ( rating_score BETWEEN 1 AND 5)
-
 );
 
 
