@@ -1,24 +1,5 @@
-/* Erstellen der Datenbanktabellen
+-- Erstellen der Datenbanktabellen
 -----------------------------------------------------------------
-   Bei der Erstellung der Datenbanktabellen werden ausschließlich technische Schlüssel als Primärschlussel verwendet. Entgegen eines fachlichen
-   Schlüssels bleiben die Beziehungen dadurch eindeutig und konsistent. Ausnahmen bilden Verknüpfungstabellen, bei denen sich der Primärschlüssel
-   aus den Fremdschlüsseln der zu verknüpfenden Attribute zusammensetzt.
-   Die Erzeugung der Primärschlüssel erfolgt durch Postgres bei Anlage durch die Option 'GENERATED ALWAYS AS IDENTITY PRIMARY KEY'.
-
-   Fremdschlüsselbeziehungen (FOREIGN KEY), Eindeutigkeitsmerkmale (UNIQUE), Prüfkriterien (CHECKS) und Angaben zu Standardwerten werden
-   ausschließlich als CONSTRAINT formuliert und nicht direkt am jeweiligen Attribut hinterlegt. Dies erleichtert die Lesbarkeit und ermöglicht
-   es, die Einschränkungen eindeutig und semantisch zu benennen. Dies wiederum erleichtert spätere Änderungen an den Einschränkungen, falls notwendig.
-   Zudem werden Fremschlüsseleigenschaften wie ON DELETE CASCADE oder ON DELETE SET NULL definiert, wo diese sinnvoll
-   sind, um verwaiste Datensätze oder obsolete Beziehungen aufzulösen, wenn der referenzierte Eintrag gelöscht wird.
-   Ist keine Eigenschaft explizit angegeben, wird der Postgres-Standard ON DELETE NO ACTION verwendet, sodass eine Löschung
-   eines Eintrags nur möglich ist, wenn dieser nicht mehr referenziert wird.
-
-   Neben den Kern-Entitäten für die Bücherausleihe werden Nachschlagetabellen für Sprachen, Länder, Verlage und Genres angelegt. Grundsätzlich
-   könnten diese Attribute direkt innerhalb der jeweiligen Entität als Text-Attribut modelliert werden. Allerdings birgt dieses Vorgehen das Risiko,
-   der Mehrfacherfassung, Rechtschreibfehlern und Fehleingaben. Zudem trägt die Überführung in eigene Entitäten zur Normalisierung der Datenbank bei.
-
------------------------------------------------------------------ */
-
 /* Genre-Tabelle (genre)
    ----------------
    Da Bücher mehreren Genres zugeordnet sein können, wird zunächst eine Nachschlagetabelle mit der Bezeichnung (name)
@@ -28,7 +9,7 @@
    Nachschlagetabelle eindeutig sein, um bei Zuordnungen konsistente Ergebnisse sicherzustellen. Daher wird das Attribut
    name zudem mit einem UNIQUE-Constraint versehen.
 */
-CREATE TABLE genre
+CREATE TABLE genre  
 (
     genre_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name     varchar(50) NOT NULL,
