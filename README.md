@@ -36,7 +36,13 @@ Bla Bla Context
 
 # Testing
 
-## Testfälle definieren
+## Prozeduren installieren
+
+Zur Installation der Prozeduren auf der Datenbank sind die SQL-Dateien im Ordner `/test/procedures/*` auszuführen.
+
+## Testfälle ausführen
+
+Die Testfälle sind im
 
 ### 01 – LookUp-Tabellen (`01_testCases_LookUpTables.sql`)
 
