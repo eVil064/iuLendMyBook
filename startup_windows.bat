@@ -7,7 +7,7 @@ set BASE_PATH=.\init
 echo Starte Postgres-Server
 net start postgresql-x64-18
 
-echo Erstelle Datenbank"
+echo Erstelle Datenbank
 psql -U %DB_USER% -c "DROP DATABASE IF EXISTS %DB_NAME%;"
 psql -U %DB_USER% -c "CREATE DATABASE %DB_NAME%;"
 
@@ -39,6 +39,9 @@ psql -U %DB_USER% -d iuLendMyBook -f "%BASE_PATH%\04.3_insert_loan_ratings.sql"
 
 echo 6/6: Entfernen der temporären Tabellen
 psql -U %DB_USER% -d iuLendMyBook -f "%BASE_PATH%\05_cleanup.sql"
+
+echo Erstellen von Prozeduren und Funktionen
+psql -U %DB_USER% -d iuLendMyBook -f "%BASE_PATH%\06_create_procedures_and_functions.sql"
 
 echo Initialisierung abgeschlossen
 pause

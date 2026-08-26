@@ -11,9 +11,9 @@ CALL getOrCreatePublisher('Das Verlagshaus', 'http://dasverlagshaus.de', NULL,
                           NULL, NULL, NULL, NULL, NULL);
 
 CALL getOrCreatePublisher('Der Verlag', 'http://dasverlagshaus.info', 'Waldstrasse',
-                          '27', 'Leipzig', '04109', 'Deutschland', NULL);
+                          '27', 'Leipzig', '04109', 'Germany', NULL);
 -- 02.1.4 Prüfung referentielle Integrietät: Löschen des Verlags löscht nicht die Adresse
-SELECT deletepublisherandcheckaddress('Das Verlagshaus');
+SELECT deletepublisherandcheckaddress('Der Verlag');
 
 -- 02.2 Autoren
 ---------------------------
@@ -37,7 +37,7 @@ CALL createOrUpdateBook('Lord of the Rings - Fellowship of the Ring', '978026110
                         ARRAY ['J.R.R Tolkien'], ARRAY ['Adventure', 'Science-Fiction'], NULL);
 -- 02.3.3 Löschen eines Buchtitels als Admin
 CALL deleteBook('9780261102354', 1);
--- 02.3.4 Löschen eines Buchtitels, der nicht vorhanden ist
+-- 02.3.4 EXCEPTION: Löschen eines Buchtitels, der nicht vorhanden ist
 CALL deleteBook('9780261102354', 1);
--- 02.3.5 Löschen eines Buchtitels als User
+-- 02.3.5 EXCEPTION: Löschen eines Buchtitels als User
 CALL deleteBook('9783000001000', 3);

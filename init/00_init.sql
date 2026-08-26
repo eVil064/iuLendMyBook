@@ -1,24 +1,5 @@
-/* Erstellen der Datenbanktabellen
+-- Erstellen der Datenbanktabellen
 -----------------------------------------------------------------
-   Bei der Erstellung der Datenbanktabellen werden ausschließlich technische Schlüssel als Primärschlussel verwendet. Entgegen eines fachlichen
-   Schlüssels bleiben die Beziehungen dadurch eindeutig und konsistent. Ausnahmen bilden Verknüpfungstabellen, bei denen sich der Primärschlüssel
-   aus den Fremdschlüsseln der zu verknüpfenden Attribute zusammensetzt.
-   Die Erzeugung der Primärschlüssel erfolgt durch Postgres bei Anlage durch die Option 'GENERATED ALWAYS AS IDENTITY PRIMARY KEY'.
-
-   Fremdschlüsselbeziehungen (FOREIGN KEY), Eindeutigkeitsmerkmale (UNIQUE), Prüfkriterien (CHECKS) und Angaben zu Standardwerten werden
-   ausschließlich als CONSTRAINT formuliert und nicht direkt am jeweiligen Attribut hinterlegt. Dies erleichtert die Lesbarkeit und ermöglicht
-   es, die Einschränkungen eindeutig und semantisch zu benennen. Dies wiederum erleichtert spätere Änderungen an den Einschränkungen, falls notwendig.
-   Zudem werden Fremschlüsseleigenschaften wie ON DELETE CASCADE oder ON DELETE SET NULL definiert, wo diese sinnvoll
-   sind, um verwaiste Datensätze oder obsolete Beziehungen aufzulösen, wenn der referenzierte Eintrag gelöscht wird.
-   Ist keine Eigenschaft explizit angegeben, wird der Postgres-Standard ON DELETE NO ACTION verwendet, sodass eine Löschung
-   eines Eintrags nur möglich ist, wenn dieser nicht mehr referenziert wird.
-
-   Neben den Kern-Entitäten für die Bücherausleihe werden Nachschlagetabellen für Sprachen, Länder, Verlage und Genres angelegt. Grundsätzlich
-   könnten diese Attribute direkt innerhalb der jeweiligen Entität als Text-Attribut modelliert werden. Allerdings birgt dieses Vorgehen das Risiko,
-   der Mehrfacherfassung, Rechtschreibfehlern und Fehleingaben. Zudem trägt die Überführung in eigene Entitäten zur Normalisierung der Datenbank bei.
-
------------------------------------------------------------------ */
-
 /* Genre-Tabelle (genre)
    ----------------
    Da Bücher mehreren Genres zugeordnet sein können, wird zunächst eine Nachschlagetabelle mit der Bezeichnung (name)
@@ -28,7 +9,7 @@
    Nachschlagetabelle eindeutig sein, um bei Zuordnungen konsistente Ergebnisse sicherzustellen. Daher wird das Attribut
    name zudem mit einem UNIQUE-Constraint versehen.
 */
-CREATE TABLE genre
+CREATE TABLE genre  
 (
     genre_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name     varchar(50) NOT NULL,
@@ -458,8 +439,8 @@ CREATE TABLE role
    Diese enthält sowohl den Verweis auf den Benutzer (user_id) und die Rolle (role_id) als Fremdschlüssel.
    Beide Felder zusammen bilden den zusammengesetzten Primärschlüssel.
 
-   Die Beziehung kann letztlich aufgelöst werden, wenn ein Benutzer gelöscht wird. Somit wird der Fremdschlüssel auf
-   user_account mit einem ON DELETE CASCADE versehen.
+   Die Beziehung kann letztlich aufgelöst werden, wenn ein Benutzer oder die zugehörige Rolle gelöscht wird. Somit wird
+   der Fremdschlüssel auf user_account mit einem ON DELETE CASCADE versehen.
 */
 
 CREATE TABLE user_role
@@ -468,7 +449,8 @@ CREATE TABLE user_role
     user_id bigint NOT NULL,
 
     CONSTRAINT pk_user_role PRIMARY KEY (role_id, user_id),
-    CONSTRAINT fk_user_role_role FOREIGN KEY (role_id) REFERENCES role (role_id),
+    CONSTRAINT fk_user_role_role FOREIGN KEY (role_id) REFERENCES role (role_id)
+        ON DELETE CASCADE,
     CONSTRAINT fk_user_role_user FOREIGN KEY (user_id) REFERENCES user_account (user_id)
         ON DELETE CASCADE
 );
@@ -535,7 +517,6 @@ CREATE TABLE pickup_option
         ON DELETE CASCADE
 );
 
-
 /* Ausleihvorgang-Tabelle (book_loan)
    ----------------------
    Die Tabelle book_loan bildet die konkreten Ausleihvorgänge innerhalb der Buchtausch-App ab. Jeder Ausleihvorgang
@@ -543,10 +524,15 @@ CREATE TABLE pickup_option
    ausleiht. Neben einer eindeutigen technischen ID werden das Ausleihdatum, ein optionales Rückgabedatum
    sowie der aktuelle Status des Vorgangs gespeichert.
 
-   Über die Fremdschlüsselbeziehung zur Bereitstellungsart (fulfillment_type) wird festgelegt, ob das Exemplar per
-   Versand oder durch Abholung bereitgestellt wird. Abhängig von der gewählten Art kann zusätzlich eine
-   Benutzeradresse (user_address) für den Versand oder eine Abholoption (pickup_option) angegeben werden. Da diese
-   Angaben nicht bei jeder Bereitstellungsart benötigt werden, dürfen beide Fremdschlüssel NULL-Werte enthalten.
+   Um sicherzustellen, dass in der Ausleihe nur die Bereitstellungsarten (fulfillment_type) gewählt werden, die auch für
+   das jeweilige Exemplar freigegeben sind, wird ein zusammengesetzter Fremdschlüssel das Exemplar (book_copy) und den
+   Bereitstellungstyp (fulfillment-type) gesetzt, der auf Zuordnungstabelle book_copy_fulfillment_type verweist. Zu be-
+   rücksichtigen ist dabei, dass dadurch die Bereitstellungsarten eines Exemplars nicht mehr gelöscht werden können.
+   Prozessual könnte man es dadurch lösen, dass die Einträge der Zuordnungstabelle nicht gelöscht, sondern als inaktiv
+   gekennzeichnet werden.
+   Abhängig von der gewählten Art kann zusätzlich eine  Benutzeradresse (user_address) für den Versand oder eine
+   Abholoption (pickup_option) angegeben werden. Da diese Angaben nicht bei jeder Bereitstellungsart benötigt werden,
+   dürfen beide Fremdschlüssel NULL-Werte enthalten.
 
    Der Status eines neu angelegten Ausleihvorgangs wird durch den DEFAULT-Wert zunächst auf REQUESTED gesetzt.
    Mithilfe eines CHECK-Constraints wird sichergestellt, dass nur die vorgesehenen Status REQUESTED, ON_LOAN,
@@ -564,12 +550,12 @@ CREATE TABLE pickup_option
 CREATE TABLE book_loan
 (
     loan_id             bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    book_copy_id        bigint NOT NULL,
-    borrower_id bigint      NOT NULL,
-    loan_date           date   NOT NULL,
+    book_copy_id        bigint      NOT NULL,
+    borrower_id         bigint      NOT NULL,
+    loan_date           date        NOT NULL,
     return_date         date,
-    status      varchar(10) NOT NULL DEFAULT 'REQUESTED',
-    fulfillment_type_id bigint NOT NULL,
+    status              varchar(10) NOT NULL DEFAULT 'REQUESTED',
+    fulfillment_type_id bigint      NOT NULL,
     user_address_id     bigint,
     pickup_option_id    bigint,
 
@@ -613,7 +599,6 @@ CREATE TABLE loan_rating
     CONSTRAINT fk_loan_rating_loan FOREIGN KEY (loan_id) REFERENCES book_loan (loan_id)
         ON DELETE CASCADE,
     CONSTRAINT chk_loan_rating_score CHECK ( rating_score BETWEEN 1 AND 5)
-
 );
 
 
