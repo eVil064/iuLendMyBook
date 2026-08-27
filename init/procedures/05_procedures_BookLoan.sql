@@ -1,37 +1,15 @@
-/* Löscht die übergebenen Zeitslots und die betroffenen Abholoptionen zurück. Für diese IDs wird Aufgrund der Referenz-
-   aktion in der Tabelle pickup_option der Zeitsloot auf NULL gesetzt
- */
-CREATE OR REPLACE FUNCTION deleteTimeSlot(p_timeslot_id BIGINT[])
-    RETURNS TABLE
-            (
-                pickup_option BIGINT,
-                timeslot_id   BIGINT
-            )
-    LANGUAGE plpgsql
-AS
-$$
-BEGIN
-    RETURN QUERY WITH affectedPickup AS (SELECT pickup_option_id
-                                         from pickup_option po
-                                         WHERE po.timeslot_id = ANY (p_timeslot_id)),
-                      deletedTimeslots AS (DELETE from timeslot t WHERE t.timeslot_id = ANY (p_timeslot_id))
-                 SELECT po2.pickup_option_id, po2.timeslot_id
-                 from pickup_option po2
-                 WHERE po2.pickup_option_id IN (SELECT pickup_option_id FROM affectedPickup);
-END
-$$;
-
 -- Funktion, die anhand des aktuellen Ausleihstatus und dem Sperrstatus des Exemplars überprüft, ob ein Exemplar
 -- aktuell zur Ausleihe bereitsteht
 CREATE OR REPLACE FUNCTION isBorrowable(p_book_copy_id BIGINT) RETURNS BOOLEAN
     LANGUAGE plpgsql AS
 $$
 BEGIN
-    RETURN NOT EXISTS (SELECT 1
-                       FROM book_loan bl
-                                INNER JOIN book_copy bc ON bl.book_copy_id = bc.book_copy_id
-                       WHERE bc.book_copy_id = p_book_copy_id and status != 'RETURNED'
-                          OR bc.is_blocked);
+    RETURN NOT EXISTS
+        (SELECT 1
+         FROM book_loan bl
+                  INNER JOIN book_copy bc ON bl.book_copy_id = bc.book_copy_id
+         WHERE bc.book_copy_id = p_book_copy_id and status IN ('ON_LOAN', 'REQUESTED')
+            OR bc.is_blocked);
 END
 $$;
 
@@ -85,7 +63,7 @@ BEGIN
 
         RAISE NOTICE 'Book loan with ID % was successfully created', p_loan_id;
     ELSE
-        RAISE EXCEPTION 'The Book cannot be borrowed because it is not available';
+        RAISE EXCEPTION 'The book cannot be borrowed because it is not available';
     END IF;
 
 EXCEPTION

@@ -62,7 +62,7 @@ BEGIN
     v_isAllowed := EXISTS (SELECT 1 FROM book_copy where book_copy_id = p_book_copy_id AND owner_id = p_user_id)
         OR isAdmin(p_user_id);
     IF NOT v_isAllowed THEN
-        RAISE EXCEPTION 'Action cannot be performed. The copy may not exist or you are not allowd to perform the selected action';
+        RAISE EXCEPTION 'Action cannot be performed. The copy may not exist or you are not allowed to perform the selected action';
     END IF;
 
     RETURN v_isAllowed;
