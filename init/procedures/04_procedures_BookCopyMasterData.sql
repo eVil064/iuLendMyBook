@@ -23,6 +23,7 @@ END;
 $$;
 
 -- Löscht ein Buchexemplar, prüft jedoch zunächst anhand der Funktion isActionAllowed, ob die Löschung zulässig ist.
+-- Ist ein Exemplar bereits einem Ausleihvorgang zugewiesen, wir es nicht gelöscht, sondern deaktivert.
 -- Die Funktion prüft dabei, ob das Exemplar dem User zugeordnet ist oder der User eine ADMIN-Rolle besitzt.
 CREATE OR REPLACE PROCEDURE deleteBookCopy(p_book_copy_id BIGINT, p_user_id BIGINT)
     LANGUAGE plpgsql AS
@@ -32,6 +33,11 @@ BEGIN
         DELETE FROM book_copy WHERE book_copy_id = p_book_copy_id;
         RAISE NOTICE 'Book copy was deleted successfully';
     END IF;
+
+EXCEPTION
+    WHEN foreign_key_violation THEN
+        RAISE NOTICE 'The copy cannot be deleted because it is referenced in at least one loan process. The status will be set to INACTIVE';
+        UPDATE book_copy SET status = 'INACTIVE' WHERE book_copy_id = p_book_copy_id;
 END;
 $$;
 

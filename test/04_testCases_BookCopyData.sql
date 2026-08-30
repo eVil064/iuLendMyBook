@@ -21,3 +21,7 @@ CALL deleteBookCopy(
 CALL deleteBookCopy(
         (getBookCopiesByUser('9781000002003', getuserbyemail('clara.neumann@example.org')))[1],
                     getuserbyemail('clara.neumann@example.org'));
+-- 04.1.6 Löschversuch eines Exemplars mit vorhandenen Ausleihvorgängen
+CALL deleteBookCopy(
+        (getBookCopiesByUser('9783000001048', getuserbyemail('eva.brandt@example.org')))[1],
+        getuserbyemail('eva.brandt@example.org'));

@@ -29,8 +29,11 @@ CREATE OR REPLACE PROCEDURE updateUserAccount(p_fullname varchar(110), p_email v
                                               OUT p_user_id BIGINT)
     LANGUAGE plpgsql AS
 $$
+DECLARE
+    v_status_id BIGINT;
 BEGIN
     CALL getOrCreateUserAccount(p_fullname, p_email, p_phone, p_user_id);
+    SELECT status_id INTO v_status_id FROM status WHERE name = p_status;
 
     UPDATE user_account
     SET first_name     = CASE WHEN p_fullname IS NOT NULL THEN getFirstName(p_fullname) ELSE first_name END,
@@ -38,7 +41,7 @@ BEGIN
         academic_title = CASE WHEN p_fullname IS NOT NULL THEN getTitle(p_fullname) ELSE academic_title END,
         email          = CASE WHEN p_newEmail IS NULL THEN email ELSE p_newEmail END,
         phone          = CASE WHEN p_phone IS NULL THEN phone ELSE p_phone END,
-        status         = CASE WHEN p_status IS NULL THEN status ELSE p_status END
+        status_id = CASE WHEN v_status_id IS NULL THEN status_id ELSE v_status_id END
     WHERE user_id = p_user_id;
     RAISE NOTICE 'User with ID % updated successfully.', p_user_id;
 END;

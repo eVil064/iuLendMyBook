@@ -94,27 +94,19 @@ LIMIT 10;
 -- 05.5 Erstellen von Bewertungen
 ---------------------------
 -- 05.5.1 Einfügen eines Ratings
-INSERT INTO loan_rating (loan_id, rating_score, comment)
-VALUES ((SELECT loan_id
-         FROM book_loan bl
-         WHERE NOT EXISTS (SELECT 1 FROM loan_rating lr WHERE lr.loan_id = bl.loan_id)
-           AND bl.status = 'RETURNED'
-         LIMIT 1), 5, 'Fairly easy process; Quick delivery');
--- 05.5.2 CHECK CONSTRAINT VIOLATION: Fehler beim Einfügen - Falscher Score
-INSERT INTO loan_rating (loan_id, rating_score, comment)
-VALUES (5, 7, NULL);
--- 05.5.3 UNIQUE CONSTRAINT VIOLATION: Fehler beim Einfügen - Rating schon vorhanden
-INSERT INTO loan_rating (loan_id, rating_score, comment)
-VALUES (5, 3, NULL);
+CALL createBookRating(25, 5, 'Fairly easy process; Quick delivery', NULL);
+-- 05.5.2 Keine Erstellung einer Bewertung möglich, wenn Vorgang nicht existiert oder nicht im richtigen
+-- Status ist
+CALL createBookRating(35, 4, 'Quiet okay, nothing to moan about', NULL);
+-- 05.5.3 CHECK CONSTRAINT VIOLATION: Fehler beim Einfügen - Falscher Score
+CALL createBookRating(6, 7, 'Best book lendign process I''ve ever experienced', NULL);
+-- 05.5.4 UNIQUE CONSTRAINT VIOLATION: Fehler beim Einfügen - Rating schon vorhanden
+CALL createBookRating(4, 2, 'Not as good as I expected', NULL);
 
 -- 05.5.4 Anonyme Auswertung des Durchschnitts der abgegebenen Bewertungen je Buchtitel
-SELECT formatisbn(b.isbn)  ISBN,
-       b.title,
-       count(lr.rating_id) no_of_ratings,
-       round(AVG(rating_score)::numeric, 2) average_rating
-FROM loan_rating lr
-         INNER JOIN book_loan bl on lr.loan_id = bl.loan_id
-         INNER JOIN book_copy bc on bl.book_copy_id = bc.book_copy_id
-         INNER JOIN book b on bc.book_id = b.book_id
-GROUP BY b.isbn, b.title
-ORDER BY AVG(rating_score) desc
+SELECT *
+from analyzeratingsanonymized(11);
+-- 05.5.5 Fehler bei der Auswertung, wenn kein Moderator
+SELECT *
+from analyzeratingsanonymized(1);
+

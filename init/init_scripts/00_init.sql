@@ -291,11 +291,8 @@ CREATE TABLE book_genre
 
    Zudem wird ein Benutzerstatus angelegt. Dieser ermöglicht es im Betrieb
    der App Nutzer zu sperren, ohne sie und ihre Historie zu löschen. Bei Anlage eines Benutzers
-   wird davon ausgegangen, dass dieser stets aktiv ist. Daher wird am Attribut die
-   Standardwertdefinition (DEFAULT) auf'ACTIVE' gesetzt. Es wäre möglich den Status als eigene
-   Entität abzubilden und am Benutzer per Fremdschlüssel darauf zu verwesen.  Da zunächst aber
-   nur zwei Ausprägungen vorgesehen sind, wird die Eingabe über eine CHECK-Constraint
-   abgesichert,  sodass nur die Status 'ACTIVE' und 'BLOCKED‘ möglich sind.
+   wird davon ausgegangen, dass dieser stets aktiv ist. Daher als Standardwert die Status-ID des Status mit
+   dem Wert 'ACTIVE' gesetzt.
 
    Für Telefonnummer und E-Mailadresse werden weitere Prüfkriterien hinterlegt. Vor allem bei der
    E-Mailadresse wird so sichergestellt, dass sie in einem gültigen Format ohne Sonderzeichen,
@@ -311,12 +308,12 @@ CREATE TABLE user_account
     last_name      varchar(50)  NOT NULL,
     email          varchar(255) NOT NULL,
     phone          varchar(20),
-    status varchar(10) NOT NULL DEFAULT 'ACTIVE',
+    status_id bigint NOT NULL DEFAULT 1,
 
     CONSTRAINT uc_user_email UNIQUE (email),
+    CONSTRAINT fk_user_status FOREIGN KEY (status_id) REFERENCES status (status_id),
     CONSTRAINT chk_user_phone CHECK (phone ~ '^[+][0-9 -]+$'),
-    CONSTRAINT chk_user_email CHECK (email ~ '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$'),
-    CONSTRAINT chk_user_status CHECK (status IN ('ACTIVE', 'BLOCKED'))
+    CONSTRAINT chk_user_email CHECK (email ~ '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$')
 );
 /* Benutzer-Adresse-Tabelle (user_address)
    ----------------------
@@ -363,6 +360,26 @@ CREATE TABLE user_address
     CONSTRAINT uc_user_address UNIQUE (user_id, address_id, address_type_id)
 );
 
+/* Status-Tabelle (status)
+   ----------------------
+   Der Status ist eine Nachschlagetabelle, die unterschiedliche Status-Werte aufnimmt. Im Standard sind
+   dies zunächst aktiv (ACTIVE), inaktiv (INACTIVE) und gesperrt (BLOCKED). Diese Werte werden bei
+   Initialisierung der Datenbank erstellt.
+
+   Der Status dient als Grundlage für das (De-)Aktivieren und Sperren von Einträgen wie Benutzern und
+   Buchexemplaren. So ist es möglich Datensätze aus den Geschäftsprozessen zu entfernen, ohne die Historien
+   wie z.B. die Ausleihvorgänge mitlöschen zu müssen. Durch das Setzen eines nicht aktiven Status können
+   die Objekte wo nötig ausgefiltern werden.
+*/
+CREATE TABLE status
+(
+    status_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name      varchar(10) NOT NULL,
+
+    CONSTRAINT uc_status_name UNIQUE (name)
+);
+
+
 /* Buchexemplar-Tabelle (book_copy)
    ----------------------
    Während die Entität Buch (book) die globalen Metadaten des Buches verwaltet, wird mit dem
@@ -373,14 +390,15 @@ CREATE TABLE user_address
    Fremdschlüsselbeziehungen hergestellt. Beides sind Pflichtfelder da ein Buchexemplar ohne
    beide Informationen nicht existieren kann.
 
-   Zudem sind die Attribute 'gesperrt' (is_blocked) und Leihdauer (loan_duration_days) als
+   Zudem sind die Attribute Status (status) und Leihdauer (loan_duration_days) als
    Pflicht gekennzeichnet, da die Leihdauer für den Ausleihprozess relevant ist. Sie könnte zwar
    im Prozess individuell gesetzt werden, jedoch erscheint die Definition durch den Inhaber eines
    Exemplares als realitätsnäher. Zudem wird ein Prüfkriterium gesetzt, sodass sichergestellt
-   ist, dass nur positive Zahlenwerte angegeben werden können. Der gesperrt-Status soll dazu
-   dienen, einzelne Exemplare von der Leihe (temporär) ausnehmen zu können. Er ist nicht zu
-   verwechseln mit dem Entleihstatus. Dieser wird durch den Ausleihprozess definiert und wird
-   nicht am Exemplar persistiert.
+   ist, dass nur positive Zahlenwerte angegeben werden können. Der Status soll dazu
+   dienen, einzelne Exemplare temporär (BLOCKED) oder dauerhaft (INACTIVE) von der Leihe ausnehmen zu
+   können. Insbesondere der inaktiv-Status ist hilfreich, um nicht mehr verfügbare Exemplare nicht mehr
+   anzubieten, aber dennoch die verknüpfte Historie zu behalten. Als CHECK-Constraint werden die zulässigen
+   Status aktiv (ACTIVE), inaktiv (INACTIVE) und gesperrt (BLOCKED) hinterlegt.
 
    Das Feld Zustand (condition) kann durch den Inhaber genutzt werden, um den Zustand des Buches
    kurz zu beschreiben. Die Abbildung über eine Entität mit definierten Status wäre hier denkbar,
@@ -398,11 +416,12 @@ CREATE TABLE book_copy
     book_copy_id       bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     book_id            bigint   NOT NULL,
     owner_id           bigint   NOT NULL,
-    is_blocked         boolean  NOT NULL DEFAULT FALSE,
+    status_id bigint NOT NULL DEFAULT 1,
     loan_duration_days smallint NOT NULL,
     condition          varchar(50),
 
     CONSTRAINT fk_book_copy_book FOREIGN KEY (book_id) REFERENCES book (book_id),
+    CONSTRAINT fk_book_copy_status FOREIGN KEY (status_id) REFERENCES status (status_id),
     CONSTRAINT fk_book_copy_owner FOREIGN KEY (owner_id) REFERENCES user_account (user_id)
         ON DELETE CASCADE,
     CONSTRAINT chk_book_copy_duration CHECK (loan_duration_days > 0)
@@ -563,8 +582,7 @@ CREATE TABLE pickup_option
     timeslot_id      bigint,
 
     CONSTRAINT uk_pickup_option UNIQUE NULLS NOT DISTINCT (user_address_id, timeslot_id),
-    CONSTRAINT fk_pickup_option_timeslot FOREIGN KEY (timeslot_id) REFERENCES timeslot (timeslot_id)
-        ON DELETE SET NULL,
+    CONSTRAINT fk_pickup_option_timeslot FOREIGN KEY (timeslot_id) REFERENCES timeslot (timeslot_id),
     CONSTRAINT fk_pickup_option_user_adress FOREIGN KEY (user_address_id) REFERENCES
         user_address (user_address_id)
         ON DELETE CASCADE
@@ -620,10 +638,7 @@ CREATE TABLE book_loan
                                                        'CANCELED')),
     CONSTRAINT chk_book_loan_return_status CHECK (
         (status = 'RETURNED' AND return_date IS NOT NULL) OR
-        (status <> 'RETURNED' AND return_date IS NULL)),
-    CONSTRAINT chk_book_loan_fulfillment_option CHECK ((fulfillment_type_id = 1 AND
-                                                        user_address_id IS NOT NULL) OR
-                                                       (fulfillment_type_id = 2 AND pickup_option_id IS NOT NULL))
+        (status <> 'RETURNED' AND return_date IS NULL))
 );
 
 /* Bewertungs-Tabelle (loan_rating)

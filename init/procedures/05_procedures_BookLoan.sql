@@ -8,8 +8,9 @@ BEGIN
         (SELECT 1
          FROM book_loan bl
                   INNER JOIN book_copy bc ON bl.book_copy_id = bc.book_copy_id
-         WHERE bc.book_copy_id = p_book_copy_id and status IN ('ON_LOAN', 'REQUESTED')
-            OR bc.is_blocked);
+                  INNER JOIN status s on bc.status = s.status_id
+         WHERE bc.book_copy_id = p_book_copy_id and bl.status IN ('ON_LOAN', 'REQUESTED')
+            OR bc.status IN ('INACTIVE', 'BLOCKED'));
 END
 $$;
 
@@ -37,7 +38,7 @@ BEGIN
     IF p_copy_id IS NULL THEN
         RAISE EXCEPTION 'The selected book copy does not exist';
     END IF;
-    IF p_pickup_time IS NOT NULL AND p_pickup_day IS NOT NULL THEN
+    IF p_pickup_day IS NOT NULL THEN
         v_fulfillment_type := getFulfillmentTypID('PICK_UP');
         SELECT owner_id INTO v_owner_id FROM book_copy WHERE book_copy_id = p_copy_id;
 
@@ -139,5 +140,66 @@ BEGIN
                   t.day_of_week = p_pickup_day AND adt.name = 'PICK_UP'
                OR po.timeslot_id is NULL
             LIMIT 1);
+END
+$$;
+
+-- Erstellt eine neue Bewertung für einen abgeschlossenen Ausleihvorgang. Ist der Vorgang noch nicht beendet
+-- kann der Eintrag nicht erstellt werden
+CREATE OR REPLACE PROCEDURE createBookRating(p_loan_id BIGINT, p_score INTEGER, p_comment TEXT, OUT
+    p_rating_id BIGINT)
+    LANGUAGE plpgsql
+AS
+$$
+DECLARE
+    v_isReturned BOOLEAN;
+BEGIN
+    v_isReturned := EXISTS (SELECT from book_loan bl WHERE loan_id = p_loan_id AND status = 'RETURNED');
+
+    IF (v_isReturned = FALSE) THEN
+        RAISE EXCEPTION 'Loan process cannot be rated as it is not completed yet';
+    ELSE
+        INSERT INTO loan_rating (loan_id, rating_score, comment)
+        VALUES (p_loan_id, p_score, p_comment)
+        RETURNING rating_id INTO p_rating_id;
+
+        RAISE NOTICE 'Rating with ID % successfully created', p_rating_id;
+    END IF;
+END
+$$;
+
+CREATE OR REPLACE FUNCTION analyzeRatingsAnonymized(p_user_id BIGINT)
+    RETURNS TABLE
+            (
+                isbn          varchar(20),
+                title         varchar(50),
+                no_of_ratings BIGINT,
+                average_score NUMERIC(6, 2)
+            )
+    LANGUAGE plpgsql
+AS
+$$
+DECLARE
+    v_isModerator BOOLEAN;
+BEGIN
+    v_isModerator := EXISTS (SELECT
+                             from user_role ur
+                                      INNER JOIN role r on ur.role_id = r.role_id
+                             WHERE r.name = 'MODERATOR'
+                               AND ur.user_id = p_user_id);
+    IF (v_isModerator) THEN
+        RETURN QUERY (SELECT formatisbn(b.isbn),
+                             b.title,
+                             count(lr.rating_id),
+                             round(avg(rating_score)
+                                       ::numeric, 2)
+                      FROM loan_rating lr
+                               INNER JOIN book_loan bl on lr.loan_id = bl.loan_id
+                               INNER JOIN book_copy bc on bl.book_copy_id = bc.book_copy_id
+                               INNER JOIN book b on bc.book_id = b.book_id
+                      GROUP BY b.isbn, b.title
+                      ORDER BY avg(rating_score));
+    ELSE
+        RAISE EXCEPTION 'You do not have the permission to analyse rating information';
+    END IF;
 END
 $$;
