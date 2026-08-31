@@ -1,6 +1,18 @@
 # IU LendMyBook - Bücherausleihe
 
-Bla Bla Context
+Dieses Projekt beinhaltet das Konzept und die Implementierung einer Buchtausch-App auf Basis einer
+PostgreSQL-Datenbank. Die Kernfunktionen der App sind dabei die Verwaltung der Stammdaten von Büchern,
+Buchexemplaren und Benutzern, sowie die Erstellung und Speicherung von Ausleihvorgängen inklusive deren
+Bewertungen durch die entleihenden Personen.
+Die zentralen Funktionen der App werden über Prozeduren abgebildet, die das Anlegen, Bearbeiten und
+Löschen der Entitäten vollziehen. Duch Prüfungen z.B. auf notwendige Rollen oder Abhängigkeiten für die
+Ausführung der Prozeduren werden so realitätsnah wesentliche Prozesse im Rahmen der Bereitstellung und
+Ausleihe von Buchexemplaren simuliert.
+Fiktive, aber plausible Testdatensätze schaffen eine Grundlage, die es ermöglicht die
+Datenbankstruktur, Funktionen und Prozeduren zu testen.
+
+Diese `README` enthält eine Installationsanleitung für die Plattformen Docker, Windows und Linux, sowie
+eine Kurzbeschreibung der verfügbaren Testfälle.
 
 # Installation
 
@@ -9,7 +21,7 @@ Bla Bla Context
 1. Installation von Docker (siehe https://docs.docker.com/desktop/)
 2. Erstellen des Postgres-Containers und Ausführen der Initialisierungs-Skripte
      ```bash 
-    docker run --restart=unless-stopped --name iuLendMyBook -d -e POSTGERS_USER=admin \ 
+    docker run --restart=unless-stopped --name iuLendMyBook -d -e POSTGRES_USER=iuUser \ 
         -e POSTGRES_PASSWORD=* 
         -e POSTGRES_DB=iuLendMyBook \
         -v $PWD/init/:/docker-entrypoint-initdb.d/ 
@@ -200,13 +212,14 @@ Die Testfälle sind im Ordner `test/` hinterlegt und werden nachfolgend zusammen
 
 #### 04.1 Buch-Exemplare
 
-| #      | Bezeichnung                        | Beschreibung                                                     | Erwartetes Ergebnis                     | Prozedur         |
-|--------|------------------------------------|------------------------------------------------------------------|-----------------------------------------|------------------|
-| 04.1.1 | Anlegen eines Buchexemplars        | Exemplar zu ISBN `9781000002003` für `clara.neumann@example.org` | Exemplar angelegt, NOTICE mit Copy-ID   | `createBookCopy` |
-| 04.1.2 | Aktualisieren eines Buchexemplars  | Exemplar durch berechtigten Besitzer aktualisieren               | Update erfolgreich                      | `updateBookCopy` |
-| 04.1.3 | Aktualisieren durch Unberechtigten | Exemplar durch `jonas.reuter@example.org` aktualisieren          | Exception: `Action cannot be performed` | `updateBookCopy` |
-| 04.1.4 | Löschen durch Unberechtigten       | Exemplar durch `jonas.reuter@example.org` löschen                | Exception: `Action cannot be performed` | `deleteBookCopy` |
-| 04.1.5 | Löschen durch Besitzer             | Exemplar durch berechtigten Besitzer löschen                     | Löschung erfolgreich                    | `deleteBookCopy` |
+| #      | Bezeichnung                           | Beschreibung                                                          | Erwartetes Ergebnis                                                  | Prozedur         |
+|--------|---------------------------------------|-----------------------------------------------------------------------|----------------------------------------------------------------------|------------------|
+| 04.1.1 | Anlegen eines Buchexemplars           | Exemplar zu ISBN `9781000002003` für `clara.neumann@example.org`      | Exemplar angelegt, NOTICE mit Copy-ID                                | `createBookCopy` |
+| 04.1.2 | Aktualisieren eines Buchexemplars     | Exemplar durch berechtigten Besitzer aktualisieren                    | Update erfolgreich                                                   | `updateBookCopy` |
+| 04.1.3 | Aktualisieren durch Unberechtigten    | Exemplar durch `jonas.reuter@example.org` aktualisieren               | Exception: `Action cannot be performed`                              | `updateBookCopy` |
+| 04.1.4 | Löschen durch Unberechtigten          | Exemplar durch `jonas.reuter@example.org` löschen                     | Exception: `Action cannot be performed`                              | `deleteBookCopy` |
+| 04.1.5 | Löschen durch Besitzer                | Exemplar durch berechtigten Besitzer löschen                          | Löschung erfolgreich                                                 | `deleteBookCopy` |
+| 04.1.6 | Löschen eines Exemplars mit Ausleihen | Exemplar zu ISBN `9783000001048` von `eva.brandt@example.org` löschen | Exemplar nicht gelöscht, Status `INACTIVE` (referenzierte Ausleihen) | `deleteBookCopy` |
 
 ### 05 – Ausleihvorgänge (`05_testCases_BookLoan.sql`)
 
@@ -249,9 +262,11 @@ Die Testfälle sind im Ordner `test/` hinterlegt und werden nachfolgend zusammen
 
 #### 05.5 Erstellen von Bewertungen
 
-| #      | Bezeichnung                     | Beschreibung                                                | Erwartetes Ergebnis                           | Prozedur                  |
-|--------|---------------------------------|-------------------------------------------------------------|-----------------------------------------------|---------------------------|
-| 05.5.1 | Bewertung einfügen              | Rating für zurückgegebenen Ausleihvorgang (Score 5)         | Bewertung gespeichert                         | `INSERT INTO loan_rating` |
-| 05.5.2 | Bewertung mit ungültigem Score  | Rating mit Score `7` (außerhalb 1–5)                        | CHECK-Constraint-Verletzung                   | `INSERT INTO loan_rating` |
-| 05.5.3 | Doppelte Bewertung              | Zweites Rating für denselben Ausleihvorgang                 | UNIQUE-Constraint-Verletzung                  | `INSERT INTO loan_rating` |
-| 05.5.4 | Durchschnittsbewertung je Titel | Anonyme Auswertung der Bewertungen gruppiert nach Buchtitel | Aggregierte Liste mit Anzahl und Durchschnitt | `SELECT` / `GROUP BY`     |
+| #      | Bezeichnung                            | Beschreibung                                                                      | Erwartetes Ergebnis                                                       | Prozedur                   |
+|--------|----------------------------------------|-----------------------------------------------------------------------------------|---------------------------------------------------------------------------|----------------------------|
+| 05.5.1 | Bewertung einfügen                     | Rating für zurückgegebenen Ausleihvorgang (Loan-ID 25, Score 5)                   | Bewertung gespeichert, NOTICE mit Rating-ID                               | `createBookRating`         |
+| 05.5.2 | Bewertung ohne abgeschlossenen Vorgang | Bewertung für nicht existierenden oder nicht zurückgegebenen Vorgang (Loan-ID 35) | Exception: `Loan process cannot be rated as it is not completed yet`      | `createBookRating`         |
+| 05.5.3 | Bewertung mit ungültigem Score         | Rating mit Score `7` (außerhalb 1–5)                                              | CHECK-Constraint-Verletzung                                               | `createBookRating`         |
+| 05.5.4 | Doppelte Bewertung                     | Zweites Rating für denselben Ausleihvorgang (Loan-ID 4)                           | UNIQUE-Constraint-Verletzung                                              | `createBookRating`         |
+| 05.5.5 | Durchschnittsbewertung je Titel        | Anonyme Auswertung als Moderator (User-ID 11)                                     | Aggregierte Liste mit ISBN, Titel, Anzahl und Durchschnitt                | `analyzeRatingsAnonymized` |
+| 05.5.6 | Auswertung ohne Moderator-Rolle        | Auswertung durch User ohne Rolle `MODERATOR` (User-ID 1)                          | Exception: `You do not have the permission to analyse rating information` | `analyzeRatingsAnonymized` |
