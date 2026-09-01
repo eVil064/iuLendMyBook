@@ -276,10 +276,30 @@ CREATE TABLE book_genre
     genre_id bigint,
 
     CONSTRAINT pk_book_genre PRIMARY KEY (book_id, genre_id),
-    CONSTRAINT fk_book_genre_author FOREIGN KEY (genre_id) REFERENCES genre (genre_id),
+    CONSTRAINT fk_book_genre_genre FOREIGN KEY (genre_id) REFERENCES genre (genre_id),
     CONSTRAINT fk_book_genre_book FOREIGN KEY (book_id) REFERENCES book (book_id)
         ON DELETE CASCADE
 );
+
+/* Status-Tabelle (status)
+   ----------------------
+   Der Status ist eine Nachschlagetabelle, die unterschiedliche Status-Werte aufnimmt. Im Standard sind
+   dies zunächst aktiv (ACTIVE), inaktiv (INACTIVE) und gesperrt (BLOCKED). Diese Werte werden bei
+   Initialisierung der Datenbank erstellt.
+
+   Der Status dient als Grundlage für das (De-)Aktivieren und Sperren von Einträgen wie Benutzern und
+   Buchexemplaren. So ist es möglich Datensätze aus den Geschäftsprozessen zu entfernen, ohne die Historien
+   wie z.B. die Ausleihvorgänge mitlöschen zu müssen. Durch das Setzen eines nicht aktiven Status können
+   die Objekte wo nötig ausgefiltern werden.
+*/
+CREATE TABLE status
+(
+    status_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name      varchar(10) NOT NULL,
+
+    CONSTRAINT uc_status_name UNIQUE (name)
+);
+
 
 /* Benutzer-Tabelle (user_account)
    ------------------
@@ -360,26 +380,6 @@ CREATE TABLE user_address
     CONSTRAINT uc_user_address UNIQUE (user_id, address_id, address_type_id)
 );
 
-/* Status-Tabelle (status)
-   ----------------------
-   Der Status ist eine Nachschlagetabelle, die unterschiedliche Status-Werte aufnimmt. Im Standard sind
-   dies zunächst aktiv (ACTIVE), inaktiv (INACTIVE) und gesperrt (BLOCKED). Diese Werte werden bei
-   Initialisierung der Datenbank erstellt.
-
-   Der Status dient als Grundlage für das (De-)Aktivieren und Sperren von Einträgen wie Benutzern und
-   Buchexemplaren. So ist es möglich Datensätze aus den Geschäftsprozessen zu entfernen, ohne die Historien
-   wie z.B. die Ausleihvorgänge mitlöschen zu müssen. Durch das Setzen eines nicht aktiven Status können
-   die Objekte wo nötig ausgefiltern werden.
-*/
-CREATE TABLE status
-(
-    status_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name      varchar(10) NOT NULL,
-
-    CONSTRAINT uc_status_name UNIQUE (name)
-);
-
-
 /* Buchexemplar-Tabelle (book_copy)
    ----------------------
    Während die Entität Buch (book) die globalen Metadaten des Buches verwaltet, wird mit dem
@@ -396,9 +396,7 @@ CREATE TABLE status
    Exemplares als realitätsnäher. Zudem wird ein Prüfkriterium gesetzt, sodass sichergestellt
    ist, dass nur positive Zahlenwerte angegeben werden können. Der Status soll dazu
    dienen, einzelne Exemplare temporär (BLOCKED) oder dauerhaft (INACTIVE) von der Leihe ausnehmen zu
-   können. Insbesondere der inaktiv-Status ist hilfreich, um nicht mehr verfügbare Exemplare nicht mehr
-   anzubieten, aber dennoch die verknüpfte Historie zu behalten. Als CHECK-Constraint werden die zulässigen
-   Status aktiv (ACTIVE), inaktiv (INACTIVE) und gesperrt (BLOCKED) hinterlegt.
+   können.
 
    Das Feld Zustand (condition) kann durch den Inhaber genutzt werden, um den Zustand des Buches
    kurz zu beschreiben. Die Abbildung über eine Entität mit definierten Status wäre hier denkbar,
@@ -537,7 +535,7 @@ CREATE TABLE user_role
 
    Um sicherzustellen, dass bei der Eingabe nur zulässige Zeitfenster entstehen, werden zwei
    Prüfkriterien festgelegt. So können die Wochentage nur als Zahlenwerte zwischen 1 und 7
-   angegeben werden. Zudem sollte das Ende eines Zeitfensters nicht nach dem Beginn liegen,
+   angegeben werden. Zudem sollte das Ende eines Zeitfensters nicht vor dem Beginn liegen,
    sodass die dies als weiteres Kriterium ergänzt wird.
 */
 
@@ -567,12 +565,10 @@ CREATE TABLE timeslot
 
    Aufgrund der Pflichtangabe einer Benutzeradresse innerhalb der Abholoption ist es sinnvoll,
    die Abholoption zu entfernen, sobald die Benutzeradresse gelöscht wird. Dies wird durch die
-   Aktion ON DELETE CASCADE erreicht. Da der Zeitslot nicht verpflichtend ist, muss eine Löschung
-   dort nicht so restriktiv gehandhabt werden. Bei einer Löschung wird über die Aktion ON DELETE
-   SET NULL die Referenz lediglich aufgelöst, die Abholoption bleibt aber weiterhin bestehen. Zu
-   beachten ist hierbei, dass beim Löschen eines Zeitslot eine UNIQUE-Constraint Verletzung
-   auftreten kann, sofern es bereits eine Abholoption gibt, bei der einer Adresse kein Zeitslot
-   zugewiesen ist.
+   Aktion ON DELETE CASCADE erreicht. Zwar ist der Zeitslot nicht verpflichtend, dennoch ist eine Löschung
+   restriktiv zu handhaben. Die Alternative ein ON DELETE SET NULL zu verwenden liegt nahe, jedoch würde
+   dies beim Löschen eines Zeitslots mitunter zu einer UNIQUE-Constraint Verletzung führen, sofern es
+   bereits eine Abholoption ohne Zeitslot für eine Adresse gibt.
 */
 
 CREATE TABLE pickup_option
@@ -601,9 +597,9 @@ CREATE TABLE pickup_option
    verweist.
 
    Die beiden Attribute user_address_id und pickup_option_id werden nicht als Pflichtfelder
-   deklariert, da sie abhängig von der gewählten Bereitstellungsart gefüllt werden. Um
-   sicherzustellen, dass sie gesetzt werden, wird als Prüfkriterium festgelegt, dass je nach
-   Bereitstellungsart das betreffend Feld gefüllt sein muss.
+   deklariert, da sie abhängig von der gewählten Bereitstellungsart gefüllt werden. Die Sicherstellung,
+   dass die Felder in Kombination korrekt gefüllt werden kann nicht über die Constraints gelöst werden und
+   wird daher über die betreffenden Prozeduren abgebildet.
 
    Der Status eines neu angelegten Ausleihvorgangs wird durch den DEFAULT-Wert zunächst auf
    REQUESTED gesetzt. Mithilfe eines CHECK-Constraints wird sichergestellt, dass nur die
@@ -687,3 +683,6 @@ CREATE INDEX idx_book_genre_genre ON book_genre (genre_id);
 CREATE INDEX idx_book_author_author ON book_author (author_id);
 CREATE INDEX idx_user_role_user ON user_role (user_id);
 CREATE INDEX idx_book_loan_borrower_date ON book_loan (borrower_id, loan_date DESC);
+CREATE INDEX idx_book_copy_fulfillment_copy ON book_copy_fulfillment (book_copy_id, fulfillment_type_id);
+
+CREATE INDEX idx_book_loan_active_copy ON book_loan (book_copy_id) WHERE status IN ('REQUESTED', 'ON_LOAN');
