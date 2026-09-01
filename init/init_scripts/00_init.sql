@@ -634,12 +634,11 @@ CREATE TABLE book_loan
     CONSTRAINT fk_book_loan_pickup_option FOREIGN KEY (pickup_option_id) REFERENCES
         pickup_option (pickup_option_id),
     CONSTRAINT chk_book_loan_returnDate CHECK ( return_date >= loan_date),
-    CONSTRAINT chk_book_loan_status CHECK ( status IN ('REQUESTED', 'ON_LOAN', 'RETURNED',
-                                                       'CANCELED')),
-    CONSTRAINT chk_book_loan_return_status CHECK (
-        (status = 'RETURNED' AND return_date IS NOT NULL) OR
+    CONSTRAINT chk_book_loan_status CHECK ( status IN ('REQUESTED', 'ON_LOAN', 'RETURNED', 'CANCELED')),
+    CONSTRAINT chk_book_loan_return_status CHECK ((status = 'RETURNED' AND return_date IS NOT NULL) OR
         (status <> 'RETURNED' AND return_date IS NULL))
 );
+
 
 /* Bewertungs-Tabelle (loan_rating)
    ----------------------
@@ -673,4 +672,18 @@ CREATE TABLE loan_rating
     CONSTRAINT chk_loan_rating_score CHECK ( rating_score BETWEEN 1 AND 5)
 );
 
+/*Erstellt einen Index auf jene Ausleihvorgänge, bei denen sich das Buchexemplar in Ausleihe befindet.
+  Der Indext bietet die Möglichkeit, z.B. im Rahmen der Funktion 'isBorrowable' aktuell verfügbare
+  Exemplare schneller zu finden*/
+CREATE INDEX idx_book_loan_activ_copy ON book_loan (book_copy_id) WHERE status IN ('REQUESTED', 'ON_LOAN');
 
+/*Indizes auf Fremdschlüsselbeziehungen erleichtern die Suche nach Einträgen entgegen der
+  Verknüpfungsrichtung. So kann ein Buchtitel über das Exemplar schnell gefunden werden, alle Exemplare zu
+  einem Buchtitel werden jedoch nur über eine sequenzielle Suche gefunden.
+ */
+CREATE INDEX idx_book_copy_book ON book_copy (book_id);
+CREATE INDEX idx_book_copy_owner ON book_copy (owner_id);
+CREATE INDEX idx_book_genre_genre ON book_genre (genre_id);
+CREATE INDEX idx_book_author_author ON book_author (author_id);
+CREATE INDEX idx_user_role_user ON user_role (user_id);
+CREATE INDEX idx_book_loan_borrower_date ON book_loan (borrower_id, loan_date DESC);

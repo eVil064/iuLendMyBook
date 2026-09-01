@@ -37,9 +37,12 @@ BEGIN
 EXCEPTION
     WHEN foreign_key_violation THEN
         RAISE NOTICE 'The copy cannot be deleted because it is referenced in at least one loan process. The status will be set to INACTIVE';
-        UPDATE book_copy SET status = 'INACTIVE' WHERE book_copy_id = p_book_copy_id;
+        UPDATE book_copy
+        SET status_id = (SELECT status_id from status WHERE name = 'INACTIVE')
+        WHERE book_copy_id = p_book_copy_id;
 END;
 $$;
+
 
 -- Aktualisiert ein Buchexemplar, prüft jedoch zunächst anhand der Funktion isActionAllowed, ob die Aktualisierung zulässig ist.
 -- Die Funktion prüft dabei, ob das Exemplar dem User zugeordnet ist oder der User eine ADMIN-Rolle besitzt.

@@ -87,11 +87,20 @@ $$
 DECLARE
     v_user_id BIGINT;
 BEGIN
+    v_user_id := getUserByEmail(p_email);
+
     DELETE
     FROM user_account
-    WHERE user_id = getUserByEmail(p_email)
+    WHERE user_id = v_user_id
     RETURNING user_id INTO v_user_id;
     RETURN v_user_id;
+
+EXCEPTION
+    WHEN foreign_key_violation THEN
+        RAISE NOTICE 'The user cannot be deleted because it is referenced in at least one copy or loan process. The status will be set to INACTIVE';
+        UPDATE user_account
+        SET status_id = (SELECT status_id from status WHERE name = 'INACTIVE')
+        WHERE user_id = v_user_id;
 END;
 $$;
 
