@@ -110,7 +110,8 @@ $$;
    anschließend zugeordnet. Die Ermittlung eines vorhanden Datensatzes folgt dabei der jeweiligen Definitionen der UNIQUE
    Constraints
  */
-CREATE OR REPLACE PROCEDURE createOrUpdateBook(p_title varchar(255), p_isbn varchar(13), p_description text,
+CREATE OR REPLACE PROCEDURE createOrUpdateBook(p_user_id bigint, p_title varchar(255), p_isbn varchar(13),
+                                               p_description text,
                                                p_year smallint,
                                                p_edition smallint, p_language_iso_code varchar(5),
                                                p_publisher_name varchar(255),
@@ -128,8 +129,11 @@ DECLARE
     v_firstname      varchar(50);
     v_lastname       varchar(50);
     v_academic_title varchar(10);
+    v_userCanEdit BOOLEAN;
 BEGIN
     p_book_id := getBookByIsbn(p_isbn);
+    v_userCanEdit := EXISTS (SELECT 1 from book_copy where book_id = p_book_id and owner_id = p_user_id) OR
+                     isadmin(p_user_id);
     v_language_id := getLanguage(p_language_iso_code);
     v_publisher_id := getPublisher(p_publisher_name);
 
@@ -139,7 +143,7 @@ BEGIN
                 v_language_id, v_publisher_id)
         RETURNING book_id INTO p_book_id;
         RAISE NOTICE 'Book "%" with ID % successfully created', p_title, p_book_id;
-    ELSE
+    ELSIF v_userCanEdit THEN
         DELETE from book_genre WHERE book_id = p_book_id;
         DELETE from book_author WHERE book_id = p_book_id;
         UPDATE book
@@ -152,6 +156,8 @@ BEGIN
         WHERE book_id = p_book_id
         RETURNING book_id INTO p_book_id;
         RAISE NOTICE 'Book "%" with ID % successfully updated', p_title, p_book_id;
+    ELSE
+        RAISE EXCEPTION 'You are not allowed to edit this title';
     END IF;
 
     FOREACH v_genre IN ARRAY p_genre_array
