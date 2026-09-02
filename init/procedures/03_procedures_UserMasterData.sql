@@ -29,8 +29,11 @@ CREATE OR REPLACE PROCEDURE updateUserAccount(p_fullname varchar(110), p_email v
                                               OUT p_user_id BIGINT)
     LANGUAGE plpgsql AS
 $$
+DECLARE
+    v_status_id BIGINT;
 BEGIN
     CALL getOrCreateUserAccount(p_fullname, p_email, p_phone, p_user_id);
+    SELECT status_id INTO v_status_id FROM status WHERE name = p_status;
 
     UPDATE user_account
     SET first_name     = CASE WHEN p_fullname IS NOT NULL THEN getFirstName(p_fullname) ELSE first_name END,
@@ -38,7 +41,7 @@ BEGIN
         academic_title = CASE WHEN p_fullname IS NOT NULL THEN getTitle(p_fullname) ELSE academic_title END,
         email          = CASE WHEN p_newEmail IS NULL THEN email ELSE p_newEmail END,
         phone          = CASE WHEN p_phone IS NULL THEN phone ELSE p_phone END,
-        status         = CASE WHEN p_status IS NULL THEN status ELSE p_status END
+        status_id = CASE WHEN v_status_id IS NULL THEN status_id ELSE v_status_id END
     WHERE user_id = p_user_id;
     RAISE NOTICE 'User with ID % updated successfully.', p_user_id;
 END;
@@ -47,19 +50,33 @@ $$;
 /* Ordnet einem Benutzer unter Angabe der Benutzer-ID, Adress-ID und des Adresstyps eine Adresse zu und gibt die
    ID des erzeugten Eintrags zurück.
 */
-CREATE OR REPLACE PROCEDURE createUserAddress(p_user_id BIGINT, p_address_id BIGINT, p_address_type varchar(10),
-                                              OUT p_user_address_id BIGINT)
+CREATE OR REPLACE PROCEDURE getOrCreateUserAddress(p_user_id BIGINT, p_address_id BIGINT,
+                                                   p_address_type varchar(10),
+                                                   OUT p_user_address_id BIGINT)
     LANGUAGE plpgsql AS
 $$
 DECLARE
     v_type_id BIGINT;
 BEGIN
     SELECT address_type_id INTO v_type_id FROM address_type WHERE name = p_address_type;
+    IF (v_type_id IS NULL) THEN
+        RAISE EXCEPTION 'Invalid addresstype. Addresstype must be on of ''SHIPPING'' or ''PICK_UP''';
+    END IF;
 
     INSERT INTO user_address (user_id, address_id, address_type_id)
     VALUES (p_user_id, p_address_id, v_type_id)
-    RETURNING address_id INTO p_user_address_id;
-    RAISE NOTICE 'User address with ID % updated successfully.', p_user_address_id;
+    RETURNING user_address_id INTO p_user_address_id;
+    RAISE NOTICE 'User address with ID % created successfully.', p_user_address_id;
+
+EXCEPTION
+    WHEN unique_violation THEN
+        SELECT user_address_id
+        INTO p_user_address_id
+        FROM user_address
+        WHERE address_type_id = v_type_id
+          and address_id = p_address_id
+          and user_id = p_user_id;
+        RAISE NOTICE 'User address already exists. Returning ID %', p_user_address_id;
 END;
 $$;
 
@@ -70,11 +87,20 @@ $$
 DECLARE
     v_user_id BIGINT;
 BEGIN
+    v_user_id := getUserByEmail(p_email);
+
     DELETE
     FROM user_account
-    WHERE user_id = getUserByEmail(p_email)
+    WHERE user_id = v_user_id
     RETURNING user_id INTO v_user_id;
     RETURN v_user_id;
+
+EXCEPTION
+    WHEN foreign_key_violation THEN
+        RAISE NOTICE 'The user cannot be deleted because it is referenced in at least one copy or loan process. The status will be set to INACTIVE';
+        UPDATE user_account
+        SET status_id = (SELECT status_id from status WHERE name = 'INACTIVE')
+        WHERE user_id = v_user_id;
 END;
 $$;
 
@@ -97,6 +123,9 @@ CREATE OR REPLACE FUNCTION deleteRole(p_role varchar(50), p_user_id BIGINT) RETU
     LANGUAGE plpgsql AS
 $$
 BEGIN
+    IF (p_role = 'ADMIN') THEN
+        RAISE EXCEPTION 'The role ''ADMIN'' is a system role and cannot be deleted';
+    END IF;
     IF isAdmin(p_user_id) THEN
         DELETE from role where name = p_role;
         RAISE NOTICE 'Role successfully deleted';
