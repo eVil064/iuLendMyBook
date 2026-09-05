@@ -165,7 +165,7 @@ CREATE TABLE publisher
     website      varchar(255),
     address_id   bigint,
 
-    CONSTRAINT uc_publisher UNIQUE NULLS NOT DISTINCT (name, address_id),
+    CONSTRAINT uk_publisher UNIQUE NULLS NOT DISTINCT (name, address_id),
     CONSTRAINT fk_publisher_address FOREIGN KEY (address_id) REFERENCES address (address_id)
 );
 
@@ -185,7 +185,7 @@ CREATE TABLE author
     first_name     varchar(50),
     last_name varchar(50) NOT NULL,
 
-    CONSTRAINT uc_author UNIQUE NULLS NOT DISTINCT (academic_title, first_name, last_name)
+    CONSTRAINT uk_author UNIQUE NULLS NOT DISTINCT (academic_title, first_name, last_name)
 );
 
 /* Bücher-Tabelle (book)

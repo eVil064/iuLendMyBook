@@ -41,14 +41,13 @@ eine Kurzbeschreibung der verfügbaren Testfälle.
       Verzeichnis auf dem Host-System
     - `restart=unless-stopped`: Stellt sicher, dass der Container bei einem Neustart von Docker ebenfalls
       neu gestartet wird, sofern er zuvor nicht aktiv beendet wurde.
-5. Nach Abschluss der Initialisierung die Installation mit Hilfe einer Abfrage überprüfen:
+3. Nach Abschluss der Initialisierung die Installation mit Hilfe einer Abfrage überprüfen:
    ```bash 
    docker exec -it iuLendMyBook psql -U iuUser -d iuLendMyBook -c "SELECT count(*) from user_account;"
    ```
    Die Abfrage sollte als Ergebnis 20 Einträge in der Tabelle _user_account_ liefern.
-5. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin` oder über die
-   Kommandozeile des
-   Docker-Containers ausgeführt werden:
+4. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin` oder über die
+   Kommandozeile des Docker-Containers ausgeführt werden:
     - Über die Kommandozeile in die Shell des Containers wechseln:
       `docker exec -it iuLendMyBook bash`
         - Die Optionen `-i` und `-t` geben an, dass die Shell interaktiv geöffnet wird. Andernfalls
@@ -58,7 +57,7 @@ eine Kurzbeschreibung der verfügbaren Testfälle.
           angegeben werden, die geöffnet wird.
     - Ausführen der Prozedur per `psql`-Command, z.B.
    ```bash
-   psql -U iuUser -d iuLendMyBook -c "CALL createLanguage('Danish','da-DK');"
+   psql -U iuUser -d iuLendMyBook -c "CALL getOrCreateLanguage('Danish','da-DK', NULL);"
    ```
 
 ## Linux
@@ -83,11 +82,11 @@ eine Kurzbeschreibung der verfügbaren Testfälle.
    Initialisierung der Datenbank
      ```bash
     cd /var/usr/iu/iuLendMyBook
-    sudo -u postgres ./startup_linux.sh
+    sudo -u postgres bash ./startup_linux.sh
     ```
 5. Nach Abschluss der Initialisierung die Installation mit Hilfe einer Abfrage überprüfen:
    ```bash 
-   sudo psql -U iuUser -d iuLendMyBook -c "SELECT count(*) from user_account;"
+   sudo -u postgres psql -d iuLendMyBook -c "SELECT count(*) from user_account;"
    ```
 Die Abfrage liefert als Ergebnis 20 Einträge in der Tabelle _user_account_.
 
@@ -104,7 +103,7 @@ Die Abfrage liefert als Ergebnis 20 Einträge in der Tabelle _user_account_.
 
 1. Download und Installation von Postgres-Installer (https://www.postgresql.org/download/windows/, Version 15
    oder höher)
-2. Anlage eines Verzeichnisses für das die Daten des Repositories , z.B. `C:\Users\IU\Datamart\`
+2. Anlage eines Verzeichnisses für das die Daten des Repositorys , z.B. `C:\Users\IU\Datamart\`
    und klonen des Repositories; Voraussetzung hierfür ist das Vorhandensein von Git
    ```powershell
    cd C:\Users\IU\Datamart\
@@ -115,7 +114,7 @@ Die Abfrage liefert als Ergebnis 20 Einträge in der Tabelle _user_account_.
    Initialisierung der Datenbank
 4. Nach Abschluss der Initialisierung die Installation mit Hilfe einer Abfrage überprüfen:
    ```bash 
-   sudo psql -U iuUser -d iuLendMyBook -c "SELECT count(*) from user_account;"
+   psql -U postgres -d iuLendMyBook -c "SELECT count(*) from user_account;"
    ```
    Die Abfrage liefert als Ergebnis 20 Einträge in der Tabelle _user_account_.
 5. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin`, über die
