@@ -22,7 +22,8 @@ BEGIN
 
     IF p_address_id IS NULL THEN
         INSERT INTO address (street, number, location_id, longitude, latitude)
-        VALUES (p_street, p_number, v_location_id, p_longitude, p_latitude)
+        VALUES (p_street, p_number, v_location_id, p_longitude,
+                p_latitude)
         RETURNING address_id INTO p_address_id;
         RAISE NOTICE 'New address successfully created. ID: %', p_address_id;
     ELSE
@@ -74,29 +75,21 @@ CREATE OR REPLACE PROCEDURE getOrCreateAuthor(p_firstname varchar(50), p_lastnam
     LANGUAGE plpgsql AS
 $$
 BEGIN
-    IF p_academic_title IS NULL THEN
+
+    INSERT INTO author (last_name, first_name, academic_title)
+    VALUES (p_lastname, p_firstname, p_academic_title)
+    RETURNING author_id INTO v_author_id;
+    RAISE NOTICE 'New author successfully created. ID: %', v_author_id;
+
+EXCEPTION
+    WHEN unique_violation THEN
         SELECT author_id
         INTO v_author_id
         FROM author a
         WHERE a.first_name = p_firstname
           and a.last_name = p_lastname
-          and a.academic_title IS NULL;
-    ELSE
-        SELECT author_id
-        INTO v_author_id
-        FROM author a
-        WHERE a.first_name = p_firstname
-          and a.last_name = p_lastname
-          and a.academic_title = p_academic_title;
-    END IF;
-    IF v_author_id IS NULL THEN
-        INSERT INTO author (last_name, first_name, academic_title)
-        VALUES (p_lastname, p_firstname, p_academic_title)
-        RETURNING author_id INTO v_author_id;
-        RAISE NOTICE 'New author successfully created. ID: %', v_author_id;
-    ELSE
+          and a.academic_title IS NOT DISTINCT FROM p_academic_title;
         RAISE NOTICE 'Found author with ID %', v_author_id;
-    end if;
 END;
 $$;
 
@@ -115,8 +108,8 @@ CREATE OR REPLACE PROCEDURE createOrUpdateBook(p_user_id bigint, p_title varchar
                                                p_year smallint,
                                                p_edition smallint, p_language_iso_code varchar(5),
                                                p_publisher_name varchar(255),
-                                               p_author_array varchar(110)[], p_genre_array varchar(50)[],
-                                               OUT p_book_id BIGINT)
+                                               p_author_array varchar(110)[],
+                                               p_genre_array varchar(50)[], OUT p_book_id BIGINT)
     LANGUAGE plpgsql AS
 $$
 DECLARE
@@ -231,7 +224,8 @@ AS
 $$
 BEGIN
     RETURN QUERY WITH deleted_publishers AS
-                          (DELETE FROM publisher p WHERE p.name = p_name AND p.address_id IS NOT NULL RETURNING p.address_id, p.name)
+                          (DELETE FROM publisher p WHERE p.name = p_name AND p.address_id IS NOT NULL
+                              RETURNING p.address_id, p.name)
                  SELECT a.address_id, dp.name
                  from address a
                           INNER JOIN deleted_publishers dp on a.address_id = dp.address_id;

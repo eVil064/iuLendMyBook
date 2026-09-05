@@ -34,6 +34,13 @@ INSERT INTO address_type(name)
 VALUES ('SHIPPING'),
        ('PICK_UP');
 
+-- Status hinzufügen
+-- Es werden die für die Testdaten die Status aktiv, inaktiv und blockiert hinzugefügt.
+INSERT INTO status(name)
+VALUES ('ACTIVE'),
+       ('INACTIVE'),
+       ('BLOCKED');
+
 -- Bereitstellungsarten hinzufügen
 -- Es werden die für die Testdaten die Bereitstellungsarten Versand und Abholung angelegt.
 -- Diese sind zur Vereinfachung analog der Adresstypen ausgestaltet.

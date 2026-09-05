@@ -55,8 +55,7 @@ eine Kurzbeschreibung der verfügbaren Testfälle.
           wird die Shell nicht
           zur Bearbeitung geöffnet
         - Über die Angabe, die dem Containernamen folgt (hier `bash`) kann die Art der Shell
-          angegeben werden, die
-          geöffnet wird.
+          angegeben werden, die geöffnet wird.
     - Ausführen der Prozedur per `psql`-Command, z.B.
    ```bash
    psql -U iuUser -d iuLendMyBook -c "CALL createLanguage('Danish','da-DK');"

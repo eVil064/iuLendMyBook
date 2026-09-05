@@ -35,7 +35,11 @@ BEGIN
 
 EXCEPTION
     WHEN unique_violation THEN
-        SELECT language_id INTO p_id from language l WHERE l.name = p_name or l.iso_code = p_isoCode;
+        SELECT language_id
+        INTO p_id
+        from language l
+        WHERE l.name = p_name
+           or l.iso_code = p_isoCode;
         RAISE NOTICE 'Language already exists. Return ID: %', p_id;
 END;
 $$;

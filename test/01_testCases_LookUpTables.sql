@@ -1,7 +1,7 @@
 -- 01.1 Genres
 ---------------------------
 -- 01.1.1 Anlage eines neuen Genres
-CALL getOrCreateGenre('Komödie', NULL);
+CALL getOrCreateGenre('Comedy', NULL);
 -- 01.1.2 UNIQUE CONSTRAINT VIOLATION: Bestehendes Genre erneut anlegen
 CALL getOrCreateGenre('Thriller', NULL);
 -- 01.1.3 NOLL-NULL CONSTRAINT VIOLATION: Genre ohne Bezeichnung anlegen
@@ -10,9 +10,9 @@ CALL getOrCreateGenre(NULL, NULL);
 -- 01.2 Sprachen
 ---------------------------
 -- 01.2.1 Anlage einer neuen Sprache
-CALL getOrCreateLanguage('Deutsch (Österreich)', 'de-AT', NULL);
+CALL getOrCreateLanguage('German (Austria)', 'de-AT', NULL);
 -- 01.2.2 CHECK CONSTRAINT VIOLATION: Anlage einer Sprache mit ungültigem ISO-Code-Format
-CALL getOrCreateLanguage('Slowakisch', 'sk_SK', NULL);
+CALL getOrCreateLanguage('Slovak', 'sk_SK', NULL);
 
 -- 01.3 Länder
 ---------------------------
