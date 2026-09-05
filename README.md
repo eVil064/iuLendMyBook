@@ -5,7 +5,7 @@ PostgreSQL-Datenbank. Die Kernfunktionen der App sind dabei die Verwaltung der S
 Buchexemplaren und Benutzern, sowie die Erstellung und Speicherung von Ausleihvorgängen inklusive deren
 Bewertungen durch die entleihenden Personen.
 Die zentralen Funktionen der App werden über Prozeduren abgebildet, die das Anlegen, Bearbeiten und
-Löschen der Entitäten vollziehen. Duch Prüfungen z.B. auf notwendige Rollen oder Abhängigkeiten für die
+Löschen der Entitäten vollziehen. Durch Prüfungen z.B. auf notwendige Rollen oder Abhängigkeiten für die
 Ausführung der Prozeduren werden so realitätsnah wesentliche Prozesse im Rahmen der Bereitstellung und
 Ausleihe von Buchexemplaren simuliert.
 Fiktive, aber plausible Testdatensätze schaffen eine Grundlage, die es ermöglicht die
@@ -21,40 +21,43 @@ eine Kurzbeschreibung der verfügbaren Testfälle.
 1. Installation von Docker (siehe https://docs.docker.com/desktop/)
 2. Erstellen des Postgres-Containers und Ausführen der Initialisierungs-Skripte
      ```bash 
-    docker run --restart=unless-stopped --name iuLendMyBook -d -e POSTGRES_USER=iuUser \ 
-        -e POSTGRES_PASSWORD=* 
+    docker run --restart=unless-stopped \
+        --name iuLendMyBook -d \
+        -e POSTGRES_USER=iuUser \
+        -e POSTGRES_PASSWORD="DLBDSPBDM01_D" \
         -e POSTGRES_DB=iuLendMyBook \
-        -v $PWD/init/:/docker-entrypoint-initdb.d/ 
+        -v $PWD/init/:/docker-entrypoint-initdb.d/  \
         -v $PWD/resources/:/var/lib/iu/data/test_data/ \
-        -p 5440:5432 postgres:latest
+        -p 5440:5432 \
+        postgres:18
     ```
-1. Erstellt einen Container mit der Bezeichnung `iuLendMyBook` auf Basis eines
-   POSTGRES-Images in Version `LATEST`
-2. Für `POSTGRES_PASSWORD` ist ein beliebiges Passwort zu vergeben, z.B. die Kursnummer, der
-   Admin-User wird mit dem
-   Standard Postgres-User angelegt
-3. Mit Parameter `-p` wird der Port angegeben, über den der Server nach außen exponiert wird, ein
-   Zugriff ist hier
-   beispielsweise per `localhost:5440` möglich
-4. Um sicherzustellen, dass der Container nach Beenden von Docker beim nächsten Start erneut
-   startet, wird die Policy
-   `restart=unless-stopped`angewendet. Sofern der Container nicht gestopped wurde, wird er bei
-   Neustart von Docker
-   direkt neu gestartet.
-5. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin` oder über die
-   Kommandozeile des
-   Docker-Containers ausgeführt werden:
+    - Erstellt einen Container mit der Bezeichnung `iuLendMyBook` auf Basis eines
+      POSTGRES-Images in Version 18
+    - *`-e`*: gibt die Umgebungsvariablen des Containers mit an; hier können Datenbankname, Benutzer und
+      Passwort festgelegt werden
+    - *`-p`*: gibt den Port an, über den die Datenbank vom Hostsystem bzw. innerhalb des Containers
+      erreichbar ist; im Beispiel ist vom Host ein Zugriff über `localhost:5440` möglich
+    - *`-v`*: legt einen virtuellen Datenträger für den Container an und verknüpft diesen mit einem
+      Verzeichnis auf dem Host-System
+    - `restart=unless-stopped`: Stellt sicher, dass der Container bei einem Neustart von Docker ebenfalls
+      neu gestartet wird, sofern er zuvor nicht aktiv beendet wurde.
+3. Nach Abschluss der Initialisierung die Installation mit Hilfe einer Abfrage überprüfen:
+   ```bash 
+   docker exec -it iuLendMyBook psql -U iuUser -d iuLendMyBook -c "SELECT count(*) from user_account;"
+   ```
+   Die Abfrage sollte als Ergebnis 20 Einträge in der Tabelle _user_account_ liefern.
+4. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin` oder über die
+   Kommandozeile des Docker-Containers ausgeführt werden:
     - Über die Kommandozeile in die Shell des Containers wechseln:
       `docker exec -it iuLendMyBook bash`
         - Die Optionen `-i` und `-t` geben an, dass die Shell interaktiv geöffnet wird. Andernfalls
           wird die Shell nicht
           zur Bearbeitung geöffnet
         - Über die Angabe, die dem Containernamen folgt (hier `bash`) kann die Art der Shell
-          angegeben werden, die
-          geöffnet wird.
+          angegeben werden, die geöffnet wird.
     - Ausführen der Prozedur per `psql`-Command, z.B.
    ```bash
-   psql -U iuUser -d iuLendMyBook -c "CALL createLanguage('Danish','da-DK');"
+   psql -U iuUser -d iuLendMyBook -c "CALL getOrCreateLanguage('Danish','da-DK', NULL);"
    ```
 
 ## Linux
@@ -69,24 +72,53 @@ eine Kurzbeschreibung der verfügbaren Testfälle.
     sudo systemctl enable postgresql
     sudo systemctl start postgresql
     ``` 
-3. Anlage eines Verzeichnisses für das die Daten des Repositories , z.B. `/opt/`
-   und klonen des Repositories
-5. Wechsel in das angelegte Verzeichnis und Ausführung von `startup_linux.sh` zur
+3. Anlage eines Verzeichnisses für die Daten des Repositories , z.B. `/var/usr/iu/`
+   und klonen des Repositories; Voraussetzung hierfür ist das Vorhandensein von Git
+   ```bash
+   cd /var/usr/iu/
+   git clone 'https://github.com/eVil064/iuLendMyBook/'
+   ```
+4. Wechsel in das angelegte Verzeichnis und Ausführung von `startup_linux.sh` zur
    Initialisierung der Datenbank
      ```bash
-    sudo -u postgres ./startup_linux.sh
+    cd /var/usr/iu/iuLendMyBook
+    sudo -u postgres bash ./startup_linux.sh
     ```
+5. Nach Abschluss der Initialisierung die Installation mit Hilfe einer Abfrage überprüfen:
+   ```bash 
+   sudo -u postgres psql -d iuLendMyBook -c "SELECT count(*) from user_account;"
+   ```
+Die Abfrage liefert als Ergebnis 20 Einträge in der Tabelle _user_account_.
+
+6. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin` oder über die
+   Kommandozeile ausgeführt werden, z.B.
+   ```bash
+   psql -U postgres -d iuLendMyBook -c "CALL createOrUpdateBook('Herr der Ringe - Die
+   Gefährten', '9783608989410','In einem ruhigen Dorf im Auenland bekommt der junge Frodo ein 
+   Geschenk ... ', 2006::smallint, 6::smallint, 'de-DE', 'Der Verlag' , ARRAY['J.R.R. Tolkien], 
+   ARRAY['Fantasy'], NULL)"
+   ```
 
 ## Windows
 
-1. Download und Installation von Postgres-Installer (https://www.postgresql.
-   org/download/windows/, Version 15 oder höher)
-2. Anlage eines Verzeichnisses für das die Daten des Repositories , z.B. `C:\Users\IU\Datamart\`
-   und klonen des Repositories
+1. Download und Installation von Postgres-Installer (https://www.postgresql.org/download/windows/, Version 15
+   oder höher)
+2. Anlage eines Verzeichnisses für das die Daten des Repositorys , z.B. `C:\Users\IU\Datamart\`
+   und klonen des Repositories; Voraussetzung hierfür ist das Vorhandensein von Git
+   ```powershell
+   cd C:\Users\IU\Datamart\
+   git clone 'https://github.com/eVil064/iuLendMyBook/'
+   cd C:\Users\IU\Datamart\iuLendMyBook
+   ```
 3. Wechsel in das angelegte Verzeichnis und Ausführung von `startup_windows.bat` zur
    Initialisierung der Datenbank
-4. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin`, über die Kommandozeile oder per
-   PowerShell ausgeführt werden, z.B.
+4. Nach Abschluss der Initialisierung die Installation mit Hilfe einer Abfrage überprüfen:
+   ```bash 
+   psql -U postgres -d iuLendMyBook -c "SELECT count(*) from user_account;"
+   ```
+   Die Abfrage liefert als Ergebnis 20 Einträge in der Tabelle _user_account_.
+5. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin`, über die
+   Kommandozeile oder per PowerShell ausgeführt werden, z.B.
     ```shell
     psql -U postgres -d iuLendMyBook -c "CALL createOrUpdateBook('Herr der Ringe - Die 
    Gefährten', '9783608989410','In einem ruhigen Dorf im Auenland bekommt der junge Frodo ein 
@@ -98,11 +130,7 @@ eine Kurzbeschreibung der verfügbaren Testfälle.
 
 ## Prozeduren installieren
 
-Zur Installation der Prozeduren auf der Datenbank sind die SQL-Dateien im Ordner `init/procedures/`
-auszuführen.
-Da sie im Installationsverzeichnis liegen, werden sie im Rahmen der Dockerinstallation beim
-Start nach den Initialisierungsskripten eingelesen. Für Windows und Linux sind sie separat
-auszuführen.
+Die Installation der Prozeduren erfolgt automatisiert mit der Ausführung der Initialisierungsskripte
 
 ## Testfälle ausführen
 

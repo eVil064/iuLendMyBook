@@ -202,7 +202,7 @@ CREATE TABLE author
    ausschließlich realistische Daten eigetragen werden können.
 
    Verlag und Sprache sind über eine Fremdschlüsselbeziehung mit der Bibliografie verknüpft. Da
-   beide Attribute kein Pflichtangaben sind, sollte bei einer Löschung eines Verlags oder einer
+   beide Attribute keine Pflichtangaben sind, sollte bei einer Löschung eines Verlags oder einer
    Sprache die Bibliografie nicht beeinträchtigt werden. Daher wird jeweils die
    Fremdschlüsseleigenschaft ON DELETE SET NULL gesetzt, sodass lediglich die Referenz aufgelöst
    wird.
@@ -445,7 +445,7 @@ CREATE TABLE fulfillment_type
     fulfillment_type_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name varchar(50) NOT NULL,
 
-    CONSTRAINT uk_fulfillment_type_name UNIQUE (name),
+    CONSTRAINT uc_fulfillment_type_name UNIQUE (name),
     CONSTRAINT chk_fulfillment_type CHECK ( name IN ('PICK_UP', 'SHIPPING'))
 );
 
@@ -491,7 +491,7 @@ CREATE TABLE role
     role_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name    varchar(20) NOT NULL,
 
-    CONSTRAINT uk_role_name UNIQUE (name)
+    CONSTRAINT uc_role_name UNIQUE (name)
 );
 
 /* Benutzerrollen-Tabelle (user_role)
@@ -546,7 +546,7 @@ CREATE TABLE timeslot
     end_time    time     NOT NULL,
     day_of_week smallint NOT NULL,
 
-    CONSTRAINT uk_timeslot UNIQUE (begin_time, end_time, day_of_week),
+    CONSTRAINT uc_timeslot UNIQUE (begin_time, end_time, day_of_week),
     CONSTRAINT chk_timeslot_dayOfWeek CHECK ( day_of_week BETWEEN 1 AND 7),
     CONSTRAINT chk_timeslot_endAfterBegin CHECK ( end_time > begin_time)
 );
@@ -577,7 +577,7 @@ CREATE TABLE pickup_option
     user_address_id  bigint NOT NULL,
     timeslot_id      bigint,
 
-    CONSTRAINT uk_pickup_option UNIQUE NULLS NOT DISTINCT (user_address_id, timeslot_id),
+    CONSTRAINT uc_pickup_option UNIQUE NULLS NOT DISTINCT (user_address_id, timeslot_id),
     CONSTRAINT fk_pickup_option_timeslot FOREIGN KEY (timeslot_id) REFERENCES timeslot (timeslot_id),
     CONSTRAINT fk_pickup_option_user_adress FOREIGN KEY (user_address_id) REFERENCES
         user_address (user_address_id)
@@ -632,7 +632,7 @@ CREATE TABLE book_loan
     CONSTRAINT chk_book_loan_returnDate CHECK ( return_date >= loan_date),
     CONSTRAINT chk_book_loan_status CHECK ( status IN ('REQUESTED', 'ON_LOAN', 'RETURNED', 'CANCELED')),
     CONSTRAINT chk_book_loan_return_status CHECK ((status = 'RETURNED' AND return_date IS NOT NULL) OR
-        (status <> 'RETURNED' AND return_date IS NULL))
+                                                  (status <> 'RETURNED' AND return_date IS NULL))
 );
 
 
@@ -662,7 +662,7 @@ CREATE TABLE loan_rating
     rating_score smallint NOT NULL,
     comment      text,
 
-    CONSTRAINT uk_loan_rating_loan UNIQUE (loan_id),
+    CONSTRAINT uc_loan_rating_loan UNIQUE (loan_id),
     CONSTRAINT fk_loan_rating_loan FOREIGN KEY (loan_id) REFERENCES book_loan (loan_id)
         ON DELETE CASCADE,
     CONSTRAINT chk_loan_rating_score CHECK ( rating_score BETWEEN 1 AND 5)
