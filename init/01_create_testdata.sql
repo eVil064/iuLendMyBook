@@ -1,0 +1,12 @@
+\ir ./testdata/01.1_insert_plain_test_data.sql
+\ir ./testdata/01.2_read_complex_test_data.sql
+\ir ./testdata/02.1_insert_adresses.sql
+\ir ./testdata/02.2_insert_users.sql
+\ir ./testdata/02.3_insert_user_relations.sql
+\ir ./testdata/03.1_insert_publisher.sql
+\ir ./testdata/03.2_insert_authors.sql
+\ir ./testdata/03.3_insert_books.sql
+\ir ./testdata/03.4_insert_book_copies.sql
+\ir ./testdata/04.1_insert_pickup_options.sql
+\ir ./testdata/04.2_insert_book_loans.sql
+\ir ./testdata/04.3_insert_loan_ratings.sql
