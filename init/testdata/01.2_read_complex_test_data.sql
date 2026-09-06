@@ -61,17 +61,20 @@ CREATE TABLE IF NOT EXISTS author_raw_data
     last_name      varchar(50) NOT NULL
 );
 
+-- Quellpfade definieren
+\set BOOK_FILE :RESOURCES_DIR '/03_books.csv'
+\set PUBLISHER_FILE :RESOURCES_DIR '/07_publisher.csv'
+\set AUTHOR_FILE :RESOURCES_DIR '/01_authors.csv'
+\set USER_FILE :RESOURCES_DIR '/05_user_data.csv'
+
 -- Einlesen der fiktven Buchdaten
 -- Quelle: OpenAI. (2026). ChatGPT (Version GPT-5.6 Sol) .
 -- https://chat.openai.com
-COPY book_raw_data (isbn, title, description, publishing_date, edition, language, genre) FROM '/var/lib/iu/data/test_data/03_books.csv' WITH (FORMAT CSV, DELIMITER ',', HEADER true, QUOTE '"');
-COPY publisher_raw_data (isbn, name, website, street, number, postal_code, city, country_code) FROM '/var/lib/iu/data/test_data/07_publisher.csv' WITH (FORMAT CSV, DELIMITER ',', HEADER true, QUOTE '"');
-COPY author_raw_data (isbn, academic_title, first_name, last_name) FROM '/var/lib/iu/data/test_data/01_authors.csv' WITH (FORMAT CSV, DELIMITER ',', HEADER true, QUOTE '"');
+\COPY book_raw_data (isbn, title, description, publishing_date, edition, language, genre) FROM './resources/03_books.csv' WITH (FORMAT CSV, DELIMITER ',', HEADER true, QUOTE '"');
+\COPY publisher_raw_data (isbn, name, website, street, number, postal_code, city, country_code) FROM './resources/07_publisher.csv' WITH (FORMAT CSV, DELIMITER ',', HEADER true, QUOTE '"');
+\COPY author_raw_data (isbn, academic_title, first_name, last_name) FROM './resources/01_authors.csv' WITH (FORMAT CSV, DELIMITER ',', HEADER true, QUOTE '"');
 
 -- Einlesen der fiktven User-Daten
 -- Quelle: OpenAI. (2026). ChatGPT (Version GPT-5.6 Sol) .
 -- https://chat.openai.com
-COPY user_raw_data (academic_title, first_name, last_name, email, phone, street, number, longitude, latitude,
-                    postal_code, city,
-                    country_code,
-                    role_name) FROM '/var/lib/iu/data/test_data/05_user_data.csv' WITH (FORMAT CSV, DELIMITER ',', HEADER true, QUOTE '"');
+\COPY user_raw_data (academic_title, first_name, last_name, email, phone, street, number, longitude, latitude, postal_code, city, country_code, role_name) FROM './resources/05_user_data.csv' WITH (FORMAT CSV, DELIMITER ',', HEADER true, QUOTE '"');
