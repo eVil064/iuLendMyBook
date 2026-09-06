@@ -23,13 +23,15 @@ eine Kurzbeschreibung der verfügbaren Testfälle.
      ```bash 
     docker run --restart=unless-stopped \
         --name iuLendMyBook -d \
-        -e POSTGRES_USER=iuUser \
+        -e POSTGRES_USER=postgres \
         -e POSTGRES_PASSWORD="DLBDSPBDM01_D" \
-        -e POSTGRES_DB=iuLendMyBook \
-        -v $PWD/init/:/docker-entrypoint-initdb.d/  \
-        -v $PWD/resources/:/var/lib/iu/data/test_data/ \
-        -p 5440:5432 \
-        postgres:18
+        -e POSTGRES_DB=iulendmybook \
+        -e BASE_PATH="/home/usr/iu/data" \
+        -v $PWD/startup_docker.sh:/docker-entrypoint-initdb.d/startup_docker.sh \
+        -v $PWD/init:/home/usr/iu/data/init \
+        -v $PWD/resources:/home/usr/iu/data/resources \
+        -v $PWD/test:/home/usr/iu/data/test \
+        -p 5440:5432 postgres:18
     ```
     - Erstellt einen Container mit der Bezeichnung `iuLendMyBook` auf Basis eines
       POSTGRES-Images in Version 18
@@ -43,7 +45,7 @@ eine Kurzbeschreibung der verfügbaren Testfälle.
       neu gestartet wird, sofern er zuvor nicht aktiv beendet wurde.
 3. Nach Abschluss der Initialisierung die Installation mit Hilfe einer Abfrage überprüfen:
    ```bash 
-   docker exec -it iuLendMyBook psql -U iuUser -d iuLendMyBook -c "SELECT count(*) from user_account;"
+   docker exec -it iuLendMyBook psql -U postgres -d iulendmybook -c "SELECT count(*) from user_account;"
    ```
    Die Abfrage sollte als Ergebnis 20 Einträge in der Tabelle _user_account_ liefern.
 4. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin` oder über die
@@ -57,7 +59,7 @@ eine Kurzbeschreibung der verfügbaren Testfälle.
           angegeben werden, die geöffnet wird.
     - Ausführen der Prozedur per `psql`-Command, z.B.
    ```bash
-   psql -U iuUser -d iuLendMyBook -c "CALL getOrCreateLanguage('Danish','da-DK', NULL);"
+   psql -U postgres -d iulendmybook -c "CALL getOrCreateLanguage('Danish','da-DK', NULL);"
    ```
 
 ## Linux
@@ -72,30 +74,30 @@ eine Kurzbeschreibung der verfügbaren Testfälle.
     sudo systemctl enable postgresql
     sudo systemctl start postgresql
     ``` 
-3. Anlage eines Verzeichnisses für die Daten des Repositories , z.B. `/var/usr/iu/`
+3. Anlage eines Verzeichnisses für die Daten des Repositories , z.B. `/home/user/iu/`
    und klonen des Repositories; Voraussetzung hierfür ist das Vorhandensein von Git
    ```bash
-   cd /var/usr/iu/
+   cd /home/user/iu/
    git clone 'https://github.com/eVil064/iuLendMyBook/'
    ```
 4. Wechsel in das angelegte Verzeichnis und Ausführung von `startup_linux.sh` zur
    Initialisierung der Datenbank
      ```bash
-    cd /var/usr/iu/iuLendMyBook
+    cd /home/user/iu/iuLendMyBook
     sudo -u postgres bash ./startup_linux.sh
     ```
 5. Nach Abschluss der Initialisierung die Installation mit Hilfe einer Abfrage überprüfen:
    ```bash 
-   sudo -u postgres psql -d iuLendMyBook -c "SELECT count(*) from user_account;"
+   sudo -u postgres psql -d iulendmybook -c "SELECT count(*) from user_account;"
    ```
 Die Abfrage liefert als Ergebnis 20 Einträge in der Tabelle _user_account_.
 
 6. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin` oder über die
    Kommandozeile ausgeführt werden, z.B.
    ```bash
-   psql -U postgres -d iuLendMyBook -c "CALL createOrUpdateBook('Herr der Ringe - Die
+   sudo -u postgres psql -U postgres -d iulendmybook -c "CALL createOrUpdateBook(getUserByEmail('felix.brenner@example.org'), 'Herr der Ringe - Die
    Gefährten', '9783608989410','In einem ruhigen Dorf im Auenland bekommt der junge Frodo ein 
-   Geschenk ... ', 2006::smallint, 6::smallint, 'de-DE', 'Der Verlag' , ARRAY['J.R.R. Tolkien], 
+   Geschenk ... ', 2006::smallint, 6::smallint, 'de-DE', 'Der Verlag' , ARRAY['J.R.R. Tolkien'], 
    ARRAY['Fantasy'], NULL)"
    ```
 
@@ -114,13 +116,13 @@ Die Abfrage liefert als Ergebnis 20 Einträge in der Tabelle _user_account_.
    Initialisierung der Datenbank
 4. Nach Abschluss der Initialisierung die Installation mit Hilfe einer Abfrage überprüfen:
    ```bash 
-   psql -U postgres -d iuLendMyBook -c "SELECT count(*) from user_account;"
+   psql -U postgres -d iulendmybook -c "SELECT count(*) from user_account;"
    ```
    Die Abfrage liefert als Ergebnis 20 Einträge in der Tabelle _user_account_.
 5. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin`, über die
    Kommandozeile oder per PowerShell ausgeführt werden, z.B.
     ```shell
-    psql -U postgres -d iuLendMyBook -c "CALL createOrUpdateBook('Herr der Ringe - Die 
+    psql -U postgres -d iulendmybook -c "CALL createOrUpdateBook(getUserByEmail('felix.brenner@example.org'),'Herr der Ringe - Die 
    Gefährten', '9783608989410','In einem ruhigen Dorf im Auenland bekommt der junge Frodo ein 
    Geschenk ... ', 2006::smallint, 6::smallint, 'de-DE', 'Der Verlag' , ARRAY['J.R.R. Tolkien], 
    ARRAY['Fantasy'], NULL)"
