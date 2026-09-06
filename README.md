@@ -105,24 +105,27 @@ Die Abfrage liefert als Ergebnis 20 Einträge in der Tabelle _user_account_.
 
 1. Download und Installation von Postgres-Installer (https://www.postgresql.org/download/windows/, Version 15
    oder höher)
-2. Anlage eines Verzeichnisses für das die Daten des Repositorys , z.B. `C:\Users\IU\Datamart\`
+2. `pgpass`-Datei zur Authentifizierung des `postgres-Users` bearbeiten/anlagen. Ist die Datein unter `%APPDATA%\postgresql\pgpass.conf` nicht verfügbar, muss sie zunächst angegelgt werden. In der Datei sind die Daten aus der Installtion (Port, User und Passwort) anzugeben, z.B.
+   `localhost:5432:iulendmybook:postgres:mypassword`
+3. Pfad für `psql` registrieren, um in Skripten zugreifen zu können (ggf. Installationspfad anpassen): z.B.: `setx /M PATH "%PATH%;C:\Program Files\PostgreSQL\18\bin`
+4. Anlage eines Verzeichnisses für das die Daten des Repositorys , z.B. `C:\Users\IU\Datamart\`
    und klonen des Repositories; Voraussetzung hierfür ist das Vorhandensein von Git
    ```powershell
    cd C:\Users\IU\Datamart\
    git clone 'https://github.com/eVil064/iuLendMyBook/'
    cd C:\Users\IU\Datamart\iuLendMyBook
    ```
-3. Wechsel in das angelegte Verzeichnis und Ausführung von `startup_windows.bat` zur
+5. Wechsel in das angelegte Verzeichnis und Ausführung von `startup_windows.bat` zur
    Initialisierung der Datenbank
-4. Nach Abschluss der Initialisierung die Installation mit Hilfe einer Abfrage überprüfen:
+6. Nach Abschluss der Initialisierung die Installation mit Hilfe einer Abfrage überprüfen:
    ```bash 
    psql -U postgres -d iulendmybook -c "SELECT count(*) from user_account;"
    ```
    Die Abfrage liefert als Ergebnis 20 Einträge in der Tabelle _user_account_.
-5. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin`, über die
+7. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin`, über die
    Kommandozeile oder per PowerShell ausgeführt werden, z.B.
     ```shell
-    psql -U postgres -d iulendmybook -c "CALL createOrUpdateBook(getUserByEmail('felix.brenner@example.org'),'Herr der Ringe - Die 
+   psql -U postgres -d iulendmybook -c "CALL createOrUpdateBook(getUserByEmail('felix.brenner@example.org'),'Herr der Ringe - Die 
    Gefährten', '9783608989410','In einem ruhigen Dorf im Auenland bekommt der junge Frodo ein 
    Geschenk ... ', 2006::smallint, 6::smallint, 'de-DE', 'Der Verlag' , ARRAY['J.R.R. Tolkien], 
    ARRAY['Fantasy'], NULL)"
