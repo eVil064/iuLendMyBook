@@ -26,13 +26,12 @@ eine Kurzbeschreibung der verfügbaren Testfälle.
         -e POSTGRES_USER=postgres \
         -e POSTGRES_PASSWORD="DLBDSPBDM01_D" \
         -e POSTGRES_DB=iulendmybook \
-        -e BASE_PATH='/home/usr/iu/data' \
-        -v $PWD/startup_docker.sh:/docker-entrypoint-initdb.d/  \
+        -e BASE_PATH="/home/usr/iu/data" \
+        -v $PWD/startup_docker.sh:/docker-entrypoint-initdb.d/startup_docker.sh \
         -v $PWD/init:/home/usr/iu/data/init \
         -v $PWD/resources:/home/usr/iu/data/resources \
         -v $PWD/test:/home/usr/iu/data/test \
-        -p 5440:5432 \
-        postgres:18
+        -p 5440:5432 postgres:18
     ```
     - Erstellt einen Container mit der Bezeichnung `iuLendMyBook` auf Basis eines
       POSTGRES-Images in Version 18
