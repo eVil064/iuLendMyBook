@@ -77,7 +77,7 @@ eine Kurzbeschreibung der verfügbaren Testfälle.
 3. Anlage eines Verzeichnisses für die Daten des Repositories , z.B. `/home/user/iu/`
    und klonen des Repositories; Voraussetzung hierfür ist das Vorhandensein von Git
    ```bash
-   cd /var/usr/iu/
+   cd /home/user/iu/
    git clone 'https://github.com/eVil064/iuLendMyBook/'
    ```
 4. Wechsel in das angelegte Verzeichnis und Ausführung von `startup_linux.sh` zur
@@ -95,9 +95,9 @@ Die Abfrage liefert als Ergebnis 20 Einträge in der Tabelle _user_account_.
 6. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin` oder über die
    Kommandozeile ausgeführt werden, z.B.
    ```bash
-   psql -U postgres -d iulendmybook -c "CALL createOrUpdateBook('Herr der Ringe - Die
+   sudo -u postgres psql -U postgres -d iulendmybook -c "CALL createOrUpdateBook(getUserByEmail('felix.brenner@example.org'), 'Herr der Ringe - Die
    Gefährten', '9783608989410','In einem ruhigen Dorf im Auenland bekommt der junge Frodo ein 
-   Geschenk ... ', 2006::smallint, 6::smallint, 'de-DE', 'Der Verlag' , ARRAY['J.R.R. Tolkien], 
+   Geschenk ... ', 2006::smallint, 6::smallint, 'de-DE', 'Der Verlag' , ARRAY['J.R.R. Tolkien'], 
    ARRAY['Fantasy'], NULL)"
    ```
 
@@ -122,7 +122,7 @@ Die Abfrage liefert als Ergebnis 20 Einträge in der Tabelle _user_account_.
 5. Das Ausführen der Testfälle kann entweder über einen Postgres-Client wie `pgAdmin`, über die
    Kommandozeile oder per PowerShell ausgeführt werden, z.B.
     ```shell
-    psql -U postgres -d iulendmybook -c "CALL createOrUpdateBook('Herr der Ringe - Die 
+    psql -U postgres -d iulendmybook -c "CALL createOrUpdateBook(getUserByEmail('felix.brenner@example.org'),'Herr der Ringe - Die 
    Gefährten', '9783608989410','In einem ruhigen Dorf im Auenland bekommt der junge Frodo ein 
    Geschenk ... ', 2006::smallint, 6::smallint, 'de-DE', 'Der Verlag' , ARRAY['J.R.R. Tolkien], 
    ARRAY['Fantasy'], NULL)"
