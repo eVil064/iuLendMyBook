@@ -107,7 +107,7 @@ Die Abfrage liefert als Ergebnis 20 Einträge in der Tabelle _user_account_.
    oder höher)
 2. `pgpass`-Datei zur Authentifizierung des `postgres-Users` bearbeiten/anlagen. Ist die Datein unter `%APPDATA%\postgresql\pgpass.conf` nicht verfügbar, muss sie zunächst angegelgt werden. In der Datei sind die Daten aus der Installtion (Port, User und Passwort) anzugeben, z.B.
    `localhost:5432:iulendmybook:postgres:mypassword`
-3. Pfad für `psql` registrieren, um in Skripten zugreifen zu können (ggf. Installationspfad anpassen): z.B.: `setx /M PATH "%PATH%;C:\Program Files\PostgreSQL\18\bin`
+3. Pfad für `psql` registrieren, um in Skripten zugreifen zu können (ggf. Installationspfad anpassen): z.B.: `setx /M PATH "%PATH%;C:\Program Files\PostgreSQL\18\bin;C:\Program Files\PostgreSQL\18\lib`
 4. Anlage eines Verzeichnisses für das die Daten des Repositorys , z.B. `C:\Users\IU\Datamart\`
    und klonen des Repositories; Voraussetzung hierfür ist das Vorhandensein von Git
    ```powershell
