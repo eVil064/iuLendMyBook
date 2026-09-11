@@ -635,6 +635,25 @@ CREATE TABLE book_loan
                                                   (status <> 'RETURNED' AND return_date IS NULL))
 );
 
+/* Ausleihhistorie (loan_history)
+   ----------------------
+   Diese Ausleihhistorie dient der Nachvollziehbarkeit der Ausleihprozesse. In dieser Tabelle werden alle
+   Statuswechsel oder Änderungen am Ausleihvorgang erfasst. Der Zeitstempel ermöglich nachträglich
+   nachzuvollziehen, wann sich Status und/oder Rückgabedatum geändert haben. Die weitere Informationen wie
+   Entleiher, Verleiher oder das Zeitfenster ergeben sich aus dem Ausleihvorgang und sind für diese Tabelle
+   nicht relevant.
+*/
+CREATE TABLE loan_history
+(
+    id          BIGINT GENERATED ALWAYS AS IDENTITY,
+    loan_id     bigint NOT NULL,
+    loan_status varchar,
+    return_date date,
+    timestamp   timestamp,
+
+    CONSTRAINT fk_book_loan_history FOREIGN KEY (loan_id) REFERENCES book_loan (loan_id) ON DELETE CASCADE
+);
+
 
 /* Bewertungs-Tabelle (loan_rating)
    ----------------------
@@ -671,18 +690,17 @@ CREATE TABLE loan_rating
 /*Erstellt einen Index auf jene Ausleihvorgänge, bei denen sich das Buchexemplar in Ausleihe befindet.
   Der Indext bietet die Möglichkeit, z.B. im Rahmen der Funktion 'isBorrowable' aktuell verfügbare
   Exemplare schneller zu finden*/
-CREATE INDEX idx_book_loan_activ_copy ON book_loan (book_copy_id) WHERE status IN ('REQUESTED', 'ON_LOAN');
+CREATE INDEX IF NOT EXISTS idx_book_loan_activ_copy ON book_loan (book_copy_id) WHERE status IN ('REQUESTED',
+                                                                                                 'ON_LOAN');
 
 /*Indizes auf Fremdschlüsselbeziehungen erleichtern die Suche nach Einträgen entgegen der
   Verknüpfungsrichtung. So kann ein Buchtitel über das Exemplar schnell gefunden werden, alle Exemplare zu
   einem Buchtitel werden jedoch nur über eine sequenzielle Suche gefunden.
  */
-CREATE INDEX idx_book_copy_book ON book_copy (book_id);
-CREATE INDEX idx_book_copy_owner ON book_copy (owner_id);
-CREATE INDEX idx_book_genre_genre ON book_genre (genre_id);
-CREATE INDEX idx_book_author_author ON book_author (author_id);
-CREATE INDEX idx_user_role_user ON user_role (user_id);
-CREATE INDEX idx_book_loan_borrower_date ON book_loan (borrower_id, loan_date DESC);
-CREATE INDEX idx_book_copy_fulfillment_copy ON book_copy_fulfillment (book_copy_id, fulfillment_type_id);
-
-CREATE INDEX idx_book_loan_active_copy ON book_loan (book_copy_id) WHERE status IN ('REQUESTED', 'ON_LOAN');
+CREATE INDEX IF NOT EXISTS idx_book_copy_book ON book_copy (book_id);
+CREATE INDEX IF NOT EXISTS idx_book_copy_owner ON book_copy (owner_id);
+CREATE INDEX IF NOT EXISTS idx_book_genre_genre ON book_genre (genre_id);
+CREATE INDEX IF NOT EXISTS idx_book_author_author ON book_author (author_id);
+CREATE INDEX IF NOT EXISTS idx_user_role_user ON user_role (user_id);
+CREATE INDEX IF NOT EXISTS idx_book_loan_borrower_date ON book_loan (borrower_id, loan_date DESC);
+CREATE INDEX IF NOT EXISTS idx_book_copy_fulfillment_copy ON book_copy_fulfillment (book_copy_id, fulfillment_type_id);
