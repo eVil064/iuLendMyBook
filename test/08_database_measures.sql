@@ -7,7 +7,15 @@ where table_schema = 'public';
 -- Anzahl Einträge je Tabelle
 SELECT relname as tablename, n_live_tup as est_entries
 from pg_stat_user_tables
-ORDER by est_entries DESC;
+ORDER by est_entries ASC;
+
+-- Durchschnittliche Anzahl Einträge je Tabelle
+SELECT CASE WHEN n_live_tup > 10 THEN '*over_20_records*' ELSE relname END tables,
+       count(*)                                                            no_of_tables,
+       AVG(n_live_tup) as                                                  avg_records
+from pg_stat_user_tables
+group by tables
+ORDER BY avg_records
 
 -- Metadaten für die Constraints
 SELECT COUNT(*)                              AS constraints_total,
@@ -31,3 +39,5 @@ FROM pg_index i
          JOIN pg_namespace n
               ON idx.relnamespace = n.oid
 WHERE n.nspname = 'public';
+
+
