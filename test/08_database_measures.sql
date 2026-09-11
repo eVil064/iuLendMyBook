@@ -1,4 +1,4 @@
--- Größe der Datenbank (9,57 MB) inkl. Anzahl Tabellen
+-- Größe der Datenbank (9,60 MB) inkl. Anzahl Tabellen
 SELECT count(*)                                                                     no_of_tables,
        round(pg_database_size(current_database()) / 1024.0 / 1024.0, 2) || ' MB' as database_size
 from information_schema.tables
@@ -10,12 +10,12 @@ from pg_stat_user_tables
 ORDER by est_entries ASC;
 
 -- Durchschnittliche Anzahl Einträge je Tabelle
-SELECT CASE WHEN n_live_tup > 10 THEN '*over_20_records*' ELSE relname END tables,
-       count(*)                                                            no_of_tables,
-       AVG(n_live_tup) as                                                  avg_records
+SELECT CASE WHEN n_live_tup > 10 THEN 'other tables' ELSE relname END tables,
+       count(*)                                                       no_of_tables,
+       round(AVG(n_live_tup), 0) as                                   avg_records
 from pg_stat_user_tables
 group by tables
-ORDER BY avg_records
+ORDER BY avg_records;
 
 -- Metadaten für die Constraints
 SELECT COUNT(*)                              AS constraints_total,
