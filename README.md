@@ -143,7 +143,7 @@ Ausgangszustand wieder her, sodass die gelöschten Indizes nicht dauerhaft verlo
 psql -U postgres -d iulendmybook -f test/07_performance_analysis.sql
 ```
 
-## Datenbankkennzahlen (`08_database_measures.sql`)
+## Datenbankkennzahlen
 
 Ergänzend zur Performanceanalyse liefert `test/08_database_measures.sql` Metadaten zur aktuellen
 Datenbank: Größe und Tabellenanzahl, geschätzte Einträge je Tabelle, Constraint-Arten sowie die
