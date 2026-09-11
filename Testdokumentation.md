@@ -122,13 +122,13 @@ können bei Bedarf aus dem Ordner `init/procedures` nachinstalliert werden.
 
 #### 03.3 Rollenmanagement
 
-| #      | Bezeichnung                   | Beschreibung                                     | Erwartetes Ergebnis                                           | Prozedur           |
-|--------|-------------------------------|--------------------------------------------------|---------------------------------------------------------------|--------------------|
-| 03.3.1 | Anlegen einer Rolle           | Neue Rolle `New role` einfügen                   | Insert erfolgreich                                            | `INSERT INTO role` |
-| 03.3.2 | Löschen einer Rolle als User  | Rolle `New role` durch normalen Benutzer löschen | Exception: `You are not allowed to delete a role`             | `deleteRole`       |
-| 03.3.3 | Löschen einer Rolle als Admin | Rolle `New role` durch Admin löschen             | Rolle erfolgreich gelöscht                                    | `deleteRole`       |
-| 03.3.4 | Löschen der Rolle ADMIN       | Rolle `ADMIN` durch Admin löschen                | Rolle gelöscht, `user_role`-Zuordnungen kaskadierend entfernt | `deleteRole`       |
-| 03.3.5 | Löschen der Rolle MISC        | Rolle `MISC` durch Admin löschen                 | Rolle gelöscht, `user_role`-Zuordnungen kaskadierend entfernt | `deleteRole`       |
+| #      | Bezeichnung                   | Beschreibung                                     | Erwartetes Ergebnis                                             | Prozedur           |
+|--------|-------------------------------|--------------------------------------------------|-----------------------------------------------------------------|--------------------|
+| 03.3.1 | Anlegen einer Rolle           | Neue Rolle `New role` einfügen                   | Insert erfolgreich                                              | `INSERT INTO role` |
+| 03.3.2 | Löschen einer Rolle als User  | Rolle `New role` durch normalen Benutzer löschen | Exception: `You are not allowed to delete a role`               | `deleteRole`       |
+| 03.3.3 | Löschen einer Rolle als Admin | Rolle `New role` durch Admin löschen             | Rolle erfolgreich gelöscht                                      | `deleteRole`       |
+| 03.3.4 | Löschen der Rolle ADMIN       | Rolle `ADMIN` durch Admin löschen                | Rolle wird nicht gelöscht, die Rolle kann nicht entfernt werden | `deleteRole`       |
+| 03.3.5 | Löschen der Rolle MISC        | Rolle `MISC` durch Admin löschen                 | Rolle gelöscht, `user_role`-Zuordnungen kaskadierend entfernt   | `deleteRole`       |
 
 ### 04 – Buch-Exemplare (`04_testCases_BookCopyData.sql`)
 
@@ -162,7 +162,6 @@ können bei Bedarf aus dem Ordner `init/procedures` nachinstalliert werden.
 | 05.2.2 | Abholoption ohne Zeitslot                      | Abholoption mit `timeslot_id = NULL`                         | Insert erfolgreich                | `INSERT INTO pickup_option` |
 | 05.2.3 | Doppelte Abholoption                           | Gleiche Abholoption erneut einfügen                          | UNIQUE-Constraint-Verletzung      | `INSERT INTO pickup_option` |
 | 05.2.4 | Löschen einer nicht referenzierten Abholoption | Abholoption mit `pickup_option_id = 1` löschen               | Datensatz entfernt                | `DELETE FROM pickup_option` |
-| 05.2.5 | Löschen einer referenzierten Abholoption       | Abholoption mit `pickup_option_id = 7` löschen               | FOREIGN-KEY-Constraint-Verletzung | `DELETE FROM pickup_option` |
 
 #### 05.3 Erstellen einer Ausleihe
 
@@ -171,7 +170,7 @@ können bei Bedarf aus dem Ordner `init/procedures` nachinstalliert werden.
 | 05.3.1 | Ausleihe per Versand                 | Ausleihvorgang für Exemplar ISBN `9783000001031` ohne Abholdaten | Vorgang angelegt, NOTICE mit Loan-ID     | `createBookLoan`   |
 | 05.3.2 | Erneute Ausleihe desselben Exemplars | Gleiches Exemplar erneut ausleihen                               | Exception: `not available`               | `createBookLoan`   |
 | 05.3.3 | Ausleihe beenden                     | Rückgabe mit `CURRENT_DATE`                                      | Status `RETURNED`, Rückgabedatum gesetzt | `returnBook`       |
-| 05.3.4 | Ausleihe per Abholung                | Ausleihvorgang mit Abholzeit `09:45` und Wochentag 1             | Vorgang mit Pickup-Option angelegt       | `createBookLoan`   |
+| 05.3.4 | Ausleihe per Abholung                | Ausleihvorgang mit Abholzeit `14:30` und Wochentag 2             | Vorgang mit Pickup-Option angelegt       | `createBookLoan`   |
 | 05.3.5 | Rückgabe vor Ausleihdatum            | Rückgabedatum `2026-01-01` setzen                                | CHECK-Constraint-Verletzung              | `returnBook`       |
 | 05.3.6 | Status ohne Rückgabedatum            | Status direkt auf `RETURNED` setzen ohne `return_date`           | CHECK-Constraint-Verletzung              | `UPDATE book_loan` |
 | 05.3.7 | Ungültiger Ausleihstatus             | Status auf `OUTDATED` setzen                                     | CHECK-Constraint-Verletzung              | `UPDATE book_loan` |

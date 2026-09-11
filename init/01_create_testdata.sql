@@ -10,3 +10,4 @@
 \ir ./testdata/04.1_insert_pickup_options.sql
 \ir ./testdata/04.2_insert_book_loans.sql
 \ir ./testdata/04.3_insert_loan_ratings.sql
+\ir ./testdata/04.4_insert_loan_history.sql

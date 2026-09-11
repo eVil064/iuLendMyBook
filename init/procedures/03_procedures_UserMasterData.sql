@@ -41,7 +41,7 @@ BEGIN
         academic_title = CASE WHEN p_fullname IS NOT NULL THEN getTitle(p_fullname) ELSE academic_title END,
         email          = CASE WHEN p_newEmail IS NULL THEN email ELSE p_newEmail END,
         phone          = CASE WHEN p_phone IS NULL THEN phone ELSE p_phone END,
-        status_id = CASE WHEN v_status_id IS NULL THEN status_id ELSE v_status_id END
+        status_id = v_status_id
     WHERE user_id = p_user_id;
     RAISE NOTICE 'User with ID % updated successfully.', p_user_id;
 END;

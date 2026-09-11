@@ -9,7 +9,7 @@ CALL updateUserAccount('Dr. Max Müller', 'max.meier@abc.de', 'max.mueller@web.d
 CALL updateUserAccount('Christian Steffen', 'c.steffen@gmail.com', NULL, NULL, 'BLOCKED', NULL);
 -- 03.1.4 CHECK CONSTRAINT VIOLATION: Anlage eines Users mit ungültiger E-Mailadresse
 CALL getOrCreateUserAccount('Karla Karstens', 'k.karstens@#23w.de', NULL, NULL);
--- 03.1.5 CHECK CONSTRAINT VIOLATION: Aktualisierung eines Users mit falschem Status
+-- 03.1.5 NOT NULL CONSTRAINT VIOLATION: Aktualisierung eines Users mit falschem Status
 CALL updateUserAccount(NULL, 'c.steffen@gmail.com', NULL, NULL, 'SUSPENDED', NULL);
 
 -- 03.2 Benutzeradressen
@@ -43,8 +43,7 @@ VALUES ('New role');
 SELECT deleterole('New role', getuserbyemail('max.meier@web.de'));
 -- 03.3.3 Löschen einer Rolle als Admin
 SELECT deleterole('New role', findadminuser());
--- 03.3.5 Löschen einer Rolle als Admin; Erfolgreich, da Zuordnung user_role kaskadierend
--- mitgelöscht wird
+-- 03.3.4 Löschen der Rolle Admin; Nicht möglich
 SELECT deleterole('ADMIN', findadminuser());
 -- 03.3.5 Löschen einer Rolle als Admin; Erfolgreich, da Zuordnung user_role kaskadierend
 -- mitgelöscht wird

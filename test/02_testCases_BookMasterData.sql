@@ -40,14 +40,16 @@ GROUP BY title, isbn;
 
 -- 02.4 Bücher
 -- 02.4.1 Anlegen eines neuen Buches
-CALL createOrUpdateBook('Lord of the Rings - Fellowship of the Ring', '9780261102354',
+CALL createOrUpdateBook(getuserbyemail('clara.neumann@example.org'),
+                        'Lord of the Rings - Fellowship of the Ring', '9780261102354',
                         'The first part of The Lord of the Rings. Frodo Baggins inherits the powerful One Ring ' ||
                         'and must leave the Shire to prevent it from falling into the hands of the Dark Lord Sauron. ' ||
                         'Together with a fellowship of companions, he begins a dangerous journey across Middle-earth.',
                         1977::smallint, 1::smallint, 'en-US', 'HarperCollins Publishers Ltd',
                         ARRAY ['J.R.R. Tolkien'], ARRAY ['Science-Fiction'], NULL);
 -- 02.4.2 Aktualisierung eines Buches
-CALL createOrUpdateBook('Lord of the Rings - Fellowship of the Ring', '9780261102354',
+CALL createOrUpdateBook(findadminuser(),
+                        'Lord of the Rings - Fellowship of the Ring', '9780261102354',
                         'The first part of The Lord of the Rings. Frodo Baggins inherits the powerful One Ring ' ||
                         'and must leave the Shire to prevent it from falling into the hands of the Dark Lord Sauron. ' ||
                         'Together with a fellowship of companions, he begins a dangerous journey across Middle-earth.',

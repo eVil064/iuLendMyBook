@@ -600,7 +600,7 @@ CREATE TABLE book_loan
 */
 CREATE TABLE loan_history
 (
-    history_id  BIGINT GENERATED ALWAYS AS IDENTITY,
+    history_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     loan_id     bigint NOT NULL,
     loan_status varchar(10) NOT NULL,
     return_date date,
@@ -608,7 +608,6 @@ CREATE TABLE loan_history
 
     CONSTRAINT fk_book_loan_history FOREIGN KEY (loan_id) REFERENCES book_loan (loan_id) ON DELETE CASCADE
 );
-
 
 /* Bewertungs-Tabelle (loan_rating)
    ----------------------
@@ -647,7 +646,6 @@ CREATE TABLE loan_rating
   Exemplare schneller zu finden*/
 CREATE INDEX IF NOT EXISTS idx_book_loan_activ_copy ON book_loan (book_copy_id) WHERE status IN ('REQUESTED',
                                                                                                  'ON_LOAN');
-
 /*Indizes auf Fremdschlüsselbeziehungen erleichtern die Suche nach Einträgen entgegen der
   Verknüpfungsrichtung. So kann ein Buchtitel über das Exemplar schnell gefunden werden, alle Exemplare zu
   einem Buchtitel werden jedoch nur über eine sequenzielle Suche gefunden.
