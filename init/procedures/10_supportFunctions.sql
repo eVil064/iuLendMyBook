@@ -177,3 +177,11 @@ BEGIN
                   substr(p_isbn, 13, 1));
 END;
 $$;
+
+CREATE OR REPLACE FUNCTION getWeekday(p_day smallint) RETURNS varchar
+    LANGUAGE plpgsql AS
+$$
+BEGIN
+    RETURN (ARRAY ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])[p_day];
+END;
+$$;

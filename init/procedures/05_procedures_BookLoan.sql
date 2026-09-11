@@ -8,11 +8,13 @@ BEGIN
         (SELECT 1
          FROM book_loan bl
                   INNER JOIN book_copy bc ON bl.book_copy_id = bc.book_copy_id
-                  INNER JOIN status s on bc.status = s.status_id
+                  INNER JOIN status s on bc.status_id = s.status_id
          WHERE bc.book_copy_id = p_book_copy_id and bl.status IN ('ON_LOAN', 'REQUESTED')
-            OR bc.status IN ('INACTIVE', 'BLOCKED'));
+            OR s.name IN ('INACTIVE', 'BLOCKED'));
 END
 $$;
+
+drop function isBorrowable(p_book_copy_id BIGINT);
 
 /* Erstellt einen neuen Eintrag für einen Ausleihvorgang. Dabei werden die ausleihende Person und das jeweilige
    Buchexemplar herangezogen. Werden Abholzeit und -tag angegeben, wird angenommen, dass die Bereitstellungart
@@ -62,6 +64,7 @@ BEGIN
                 v_pickup_option_id, v_shipping_address)
         RETURNING loan_id INTO p_loan_id;
 
+        CALL addToLoanHistory(p_loan_id);
         RAISE NOTICE 'Book loan with ID % was successfully created', p_loan_id;
     ELSE
         RAISE EXCEPTION 'The book cannot be borrowed because it is not available';
@@ -77,30 +80,36 @@ $$;
 -- werden. Zur Vereinfachung wird der Ausleihvorgang anhand der ISBN des Exemplars und der ausleihenden Person ermittelt.
 -- In der Praxis würde das konkrete Exemplar oder die ID des Ausleihvorgangs übergeben, sodass der Vorgang unmittelbar
 -- aktualisiert werden kann
-CREATE OR REPLACE PROCEDURE returnBook(p_isbn varchar(13), p_borrower_id BIGINT, p_return_date date)
+CREATE OR REPLACE PROCEDURE returnBook(p_isbn varchar(13) DEFAULT NULL,
+                                       p_borrower_id BIGINT DEFAULT NULL, p_return_date date DEFAULT NULL,
+                                       p_loan_id BIGINT DEFAULT NULL)
     LANGUAGE plpgsql AS
 $$
 DECLARE
     v_loan_id BIGINT;
 BEGIN
     UPDATE book_loan bl
-    SET return_date = p_return_date,
+    SET return_date = COALESCE(p_return_date, current_timestamp),
         status      = 'RETURNED'
     FROM book_copy bc
              INNER JOIN book b on bc.book_id = b.book_id
-    WHERE b.isbn = p_isbn
+    WHERE (p_isbn IS NOT NULL AND b.isbn = p_isbn
       AND bl.status <> 'RETURNED'
       AND bl.borrower_id = p_borrower_id
-      AND bl.book_copy_id = bc.book_copy_id
+        AND bl.book_copy_id = bc.book_copy_id)
+       OR (bl.loan_id = p_loan_id)
     RETURNING bl.loan_id INTO v_loan_id;
 
     IF v_loan_id IS NULL THEN
         RAISE EXCEPTION 'Loan could not be updated. Loan id % was not found', v_loan_id;
     ELSE
+        CALL addToLoanHistory(v_loan_id);
         RAISE NOTICE 'Book loan with ID % was successfully updated', v_loan_id;
     END IF;
 END;
 $$;
+
+
 
 -- Ermittelt eine Versandadresse anhand der User-ID des ausleihenden Benutzers. Dabei wird berücksichtigt, dass die
 -- Adresse des Benutzers den Typ 'Versand' aufweisen muss. Entsprechend der Modellierung wäre es möglich, dass ein Nutzer
@@ -203,3 +212,15 @@ BEGIN
     END IF;
 END
 $$;
+
+CREATE OR REPLACE PROCEDURE addToLoanHistory(p_loan_id BIGINT)
+    LANGUAGE plpgsql AS
+$$
+BEGIN
+    INSERT INTO loan_history (loan_id, loan_status, return_date, timestamp)
+    SELECT bl.loan_id, bl.status, bl.return_date, clock_timestamp()
+    FROM book_loan bl
+    where loan_id = p_loan_id;
+END;
+
+$$
