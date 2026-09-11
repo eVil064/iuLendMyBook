@@ -29,10 +29,6 @@ VALUES (8, NULL);
 DELETE
 from pickup_option
 WHERE pickup_option_id = 1;
--- 05.2.5 FOREIGN KEY Constraint Violation:  Löschen einer Abholoption, die nicht referenziert wird
-DELETE
-from pickup_option
-WHERE pickup_option_id = 7;
 
 -- 05.3 Erstellen einer Ausleihe
 ---------------------------
@@ -48,7 +44,7 @@ CALL createBookLoan((getbookcopiesbyisbn('9783000001031'))[1],
 CALL returnBook('9783000001031', getUserByEmail('clara.neumann@example.org'), CURRENT_DATE);
 -- 05.3.4 Ausleihvorgang für ein Exemplar über die Bereitstellungsart Abholung
 CALL createBookLoan((getbookcopiesbyisbn('9788400003012'))[1], getUserByEmail('jonas.reuter@example.org'),
-                    '09:45:00', 1::smallint, NULL);
+                    '14:30:00', 2::smallint, NULL);
 -- 05.3.5 CHECK CONSTRAINT VIOLATION: Ausleihvorgang beenden, Rückgabedatum liegt vor Ausleihdatum
 CALL returnBook('9788400003012', getUserByEmail('jonas.reuter@example.org'),
                 '2026-01-01');
@@ -72,7 +68,7 @@ SELECT formatisbn(b.isbn)                      isbn,
        bc.condition,
        ft.name,
        concat(u.last_name, ', ', u.first_name) owner,
-       getdistancekm(53.157, 9.993682,
+       getdistancekm(51.157, 7.993682,
                      a.latitude, a.longitude)  km
 FROM book_copy bc
          INNER JOIN book b on bc.book_id = b.book_id
@@ -84,8 +80,8 @@ FROM book_copy bc
          LEFT JOIN address a on ua.address_id = a.address_id
          INNER JOIN address_type t on ua.address_type_id = t.address_type_id AND t.name = ft.name
 WHERE (isborrowable(bc.book_copy_id) AND l.name LIKE 'English%')
-  AND (ft.name = 'SHIPPING' OR (ft.name = 'PICK_UP' AND getdistancekm(53.157,
-                                                                      9.993682, a.latitude,
+  AND (ft.name = 'SHIPPING' OR (ft.name = 'PICK_UP' AND getdistancekm(51.157,
+                                                                      7.993682, a.latitude,
                                                                       a.longitude) < 100))
 ORDER BY name, b.isbn, owner_id
 LIMIT 10;
@@ -94,10 +90,10 @@ LIMIT 10;
 -- 05.5 Erstellen von Bewertungen
 ---------------------------
 -- 05.5.1 Einfügen eines Ratings
-CALL createBookRating(25, 5, 'Fairly easy process; Quick delivery', NULL);
+CALL createBookRating(30, 5, 'Fairly easy process; Quick delivery', NULL);
 -- 05.5.2 Keine Erstellung einer Bewertung möglich, wenn Vorgang nicht existiert oder nicht im richtigen
 -- Status ist
-CALL createBookRating(35, 4, 'Quiet okay, nothing to moan about', NULL);
+CALL createBookRating(45, 4, 'Quiet okay, nothing to moan about', NULL);
 -- 05.5.3 CHECK CONSTRAINT VIOLATION: Fehler beim Einfügen - Falscher Score
 CALL createBookRating(6, 7, 'Best book lendign process I''ve ever experienced', NULL);
 -- 05.5.4 UNIQUE CONSTRAINT VIOLATION: Fehler beim Einfügen - Rating schon vorhanden

@@ -14,8 +14,6 @@ BEGIN
 END
 $$;
 
-drop function isBorrowable(p_book_copy_id BIGINT);
-
 /* Erstellt einen neuen Eintrag für einen Ausleihvorgang. Dabei werden die ausleihende Person und das jeweilige
    Buchexemplar herangezogen. Werden Abholzeit und -tag angegeben, wird angenommen, dass die Bereitstellungart
    'Abholung' gewählt wurde. Mit Hilfe der Funktion getFirstPickupOption wird ermittelt, ob zum angegebenen Zeitpunkt eine

@@ -1,4 +1,4 @@
--- Größe der Datenbank (9,60 MB) inkl. Anzahl Tabellen
+-- Größe der Datenbank (9,08 MB) inkl. Anzahl Tabellen
 SELECT count(*)                                                                     no_of_tables,
        round(pg_database_size(current_database()) / 1024.0 / 1024.0, 2) || ' MB' as database_size
 from information_schema.tables

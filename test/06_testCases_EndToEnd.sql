@@ -18,7 +18,6 @@ $$
     DECLARE
         v_copy_id          BIGINT;
         v_fulfillment_type varchar := 'PICK_UP';
-        v_title            varchar := 'Beneath the Quiet Bridge';
         v_borrower_id      BIGINT;
         v_borrowerMail     varchar := 'clara.neumann@example.org';
         v_owner_id         BIGINT;
@@ -41,7 +40,7 @@ $$
                  LEFT JOIN user_address ua on bc.owner_id = ua.user_id
                  LEFT JOIN address a on ua.address_id = a.address_id
                  INNER JOIN address_type t on ua.address_type_id = t.address_type_id AND t.name = ft.name
-        WHERE (isborrowable(bc.book_copy_id) AND title = v_title AND ft.name = v_fulfillment_type)
+        WHERE (isborrowable(bc.book_copy_id) AND ft.name = v_fulfillment_type)
         LIMIT 1;
 
         SELECT t.begin_time, t.day_of_week
@@ -90,7 +89,7 @@ $$
                  LEFT JOIN user_address ua on bc.owner_id = ua.user_id
                  LEFT JOIN address a on ua.address_id = a.address_id
                  INNER JOIN address_type t on ua.address_type_id = t.address_type_id AND t.name = ft.name
-        WHERE (isborrowable(bc.book_copy_id) AND title = v_title AND ft.name = v_fulfillment_type)
+        WHERE (isborrowable(bc.book_copy_id) AND ft.name = v_fulfillment_type)
         LIMIT 1;
 
         CALL createBookLoan(v_copy_id, v_borrower_id,
@@ -132,5 +131,7 @@ from loan_history lh
          LEFT JOIN user_address ua on bl.borrower_id = ua.user_id AND ua.address_type_id = at.address_type_id
          LEFT JOIN address a on ua.address_id = a.address_id
          LEFT JOIN location l on a.location_id = l.location_id
-         LEFT JOIN loan_rating r on bl.loan_id = r.loan_id AND lh.loan_status = 'RETURNED';
+         LEFT JOIN loan_rating r on bl.loan_id = r.loan_id AND lh.loan_status = 'RETURNED'
+WHERE timestamp > current_date
+ORDER BY bl.loan_id, timestamp;
 ROLLBACK;

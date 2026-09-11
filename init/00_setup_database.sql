@@ -8,7 +8,8 @@
    Die Bezeichnung des Genres ist erforderlich und wird daher als NOT NULL angelegt. Zudem
    sollten die Werte in einer Nachschlagetabelle eindeutig sein, um bei Zuordnungen konsistente
    Ergebnisse sicherzustellen. Daher wird das Attribut name zudem mit einem UNIQUE-Constraint
-   versehen.
+   versehen. Diese beiden Einschränkungen (Constraints) werden in nachfolgenden Tabellen gleichartig
+   verwendet und daher dort nicht weiter beschrieben.
 */
 CREATE TABLE genre  
 (
@@ -24,13 +25,14 @@ CREATE TABLE genre
    weitere Nachschlagetabelle erstellt, die die Buchsprachen repräsentiert. Neben der technischen
    ID und der Sprachbezeichnung, wird zudem der ISO-Code der Sprache erfasst.
 
-   Für sinnvolle Verwendung der Sprache sollten die Felder 'name' und 'iso-code' immer gefüllt
-   sein (NOT NULL Constraint). Um Sprachvarianten unterscheiden zu können, aber dennoch
-   Doppelungen abzusichern werden beide Felder mit einem UNIQUE-Constraint belegt. Varianten
-   können somit über einen Zusatz im Feld name, z.B. Englisch (USA) - en-US oder  Englisch (UK) -
-   en-GB, erstellt werden. Zudem ist die Semantik der ISO-Codes eingrenzbar, sodass mit einem
-   Check eingegebene Werte direkt überprüft werden können.  Der reguläre Ausdruck lässt Codes mit
-   2 Kleinbuchstaben oder 2 Klein- und 2 Großbuchstaben (getrennt durch - ) zu, z.B. en-US
+   Für sinnvolle Verwendung der Sprache werden die Felder 'name' und 'iso-code' als Pflichtfelder
+   gekennzeichnet. Um Sprachvarianten unterscheiden zu können, aber dennoch Doppelungen abzusichern werden
+   beide Felder mit einem UNIQUE-Constraint belegt. Varianten können somit über einen Zusatz im Feld name,
+   z.B. Englisch (USA) - en-US oder  Englisch (UK) - en-GB, erstellt werden.
+
+   Das Feld 'iso-code' erhält zusätzlich ein CHECK-Constraint. Durch den regulären Ausdruck wird bei
+   der Eingabe sichergestellt, dass Codes nur im Schema 2 Kleinbuchstaben oder 2 Klein- und 2
+   Großbuchstaben (getrennt durch -) eingegeben werden können, z.B. en-US.
 */
 CREATE TABLE language
 (
@@ -49,10 +51,8 @@ CREATE TABLE language
    erstellt. Die Angaben zu Ländern könnte zwar auch in der Adresse selbst erfolgen, jedoch
    entspricht dies nicht einen konsequenten Normalisierung.
 
-   Für eine effiziente Suche und eine konsistente Anzeige sollten beide Felder ('name',
-   'iso_code') stets gefüllt sein, sodass beide mit einem NOT NULL-Constraint angelegt werden.
-   Zudem ist die Semantik der ISO-Codes vorgegeben und kann über einen Check bei Eingabe
-   überprüft werden. Das Prüfkriterium lässt Codes mit 2 Großbuchstaben zu, z.B. US.
+   Die Bedingungen für die Eingabe orientieren sich dabei an der Tabelle 'language', sodass hier ebenfalls
+   ein CHECK-Constraint für den iso-Code gesetzt wird.
 */
 CREATE TABLE country
 (
@@ -73,10 +73,9 @@ CREATE TABLE country
    (country). Darüber hinaus werden die Postleitzahl (postal_code) und Ort (city) als
    Tabellenspalten angelegt.
 
-   Um diese in Adressen sinnvoll verwenden zu können, werden beide Spalten als Pflichtfelder (NOT
-   NOLL-Constraint) angelegt. Da ein Ort mehreren Postleitzahlen zugeordnet sein kann, ist auf
-   beiden Spalten kein UNIQUE-Constraint zu setzen. Da die Kombination aus beiden Attributen aber
-   eindeutig sein muss, wird ein zusammengesetztes Constraint gesetzt.
+   Als Besonderheit ist hier anzuführen, dass sich die Eindeutigkeit des Ortes nicht nur aus einem Attribut
+   ergibt, sondern sich aus Postleitzahl, Ort und Land zusammensetzt. Daher wird die Kombination aus
+   allen drei Attributen als zusammengesetztes UNIQUE-Constraint festgelegt.
 
 */
 CREATE TABLE location
@@ -99,12 +98,8 @@ CREATE TABLE location
    (latitude) sind zusätzliche Attribute, um bei für die Anzeige der Suchergebnisse auch eine
    lokale/regionale Suche zu unterstützen.
 
-   Um einen Versand oder eine Abholdung durchführen zu können, sind die Informationen zu Straße
-   und Ort als erforderliche Attribute gekennzeichnet, während die Hausnummer auch NULL-Werte
-   annehmen darf, da es Adressen ohne Information zur Hausnummer geben kann.
-
-   Die Hausnummer wird als String angelegt, damit auch alphanummerische Eingaben wie 12a, möglich
-   sind. Längen- und Breitengrad haben eine feste Syntax, sodass es sich dabei um Zahlwerte
+   Die Hausnummer ist kein Pflichfeld und wird als String angelegt. So sind auch alphanummerische Eingaben
+   wie 12a, möglich. Längen- und Breitengrad haben eine feste Syntax, sodass es sich dabei um Zahlwerte
    handelt, die maximal 9 Zeichen lang sein können (3 Vorkomma- und 6 Nachkommastellen).
    Da beide nur Werte in einem definierten Intervall (Breitengrad: -90 bis +90, Längengrad: -180
    bis +180) annehmen können, werden zusätzlich Prüfkriterien gesetzt.
@@ -151,12 +146,12 @@ CREATE TABLE address_type
    gekennzeichnet wird.
 
    Die Adresse wird als Fremdschlüsselbeziehung auf die Adress-Tabelle abgebildet. Um einen Verlag
-   bei der Anlage oderZuweisung eines Buches identifizieren zu können, wird festgelegt, dass die
+   bei der Anlage oder Zuweisung eines Buches identifizieren zu können, wird festgelegt, dass die
    Kombination aus Verlagsname und der Adresse als eindeutiges Merkmal verwendet wird. Wird keine
    Adresse angegeben, so ist die Bezeichnung alleine das eindeutige Merkmal. Daher wird das
-   UNIQUE Constraint um NULLS NOT DISTINCT ergänzt. Andernfalls würde die fehlende Angaben einer
-   Adresse bei gleicher Verlagsbezeichnung einen neuen Eintrag anlegen, auch wenn bereits der
-   gleiche Name ohne Adresse besteht.
+   UNIQUE Constraint um NULLS NOT DISTINCT ergänzt. Dieser Zusatz behandelt Einträge mit NULL in der
+   Adressreferenz als gleich, sodass ein Verlag ohne Adresse aber mit der gleichen Bezeichnung nicht
+   doppelt angelegt wird.
 */
 CREATE TABLE publisher
 (
@@ -172,8 +167,8 @@ CREATE TABLE publisher
 /* Autoren-Tabelle (author)
    ----------------
    Erstellt eine Tabelle mit Name und Titel von Autoren, um sie den Büchern zuordnen zu können.
-   Die Spalte last_name ist als NOT NULL gekennzeichnet, da zumindest der Nachname für eine
-   sinnvolle Zuorndung gefüllt sein sollte. Um einen Autoren bei z.B. der Erstellung eines Buches
+   Nur das Attribut Nachname ist in diesem Kontext als Pflichtfeld definiert, um u.a. auch Künstlernamen
+   ohne Vorname abbilden zu können. Um einen Autoren bei z.B. der Erstellung eines Buches
    wiederfinden zu können, wird ein zusammengesetztes UNIQUE-Constraint auf alle Tabellenspalten
    gesetzt. Ein nicht gesetzter akademischer Titel soll nicht implizieren, dass es sich um einen
    neuen Eintrag handelt, daher wird das Constraint um NULLS NOT DISTINCT ergänzt.
@@ -234,9 +229,9 @@ CREATE TABLE book
    mehrere Bücher geschrieben haben kann, liegt eine n:m-Beziehung vor. Diese wird über diese
    Zwischentabelle aufgelöst und ordnet Autoren Büchern zu.
 
-   Als Attribute hat diese Beziehungstabelle ausschließlich die Fremdschlüsselbeziehungen zu Buch
-   (book) und Autor (author). Beide Attribute bilden zusammen den Primärschlüssel, da die
-   Kombination aus Buch und Autor eindeutig ist.
+   Das es sich um eine einfache Zuordnungstabelle handelt, werden ausschließlich die Fremdschlüsselbeziehungen
+   zu Buch (book) und Autor (author) berücksichtigt. Beide Attribute bilden zusammen den Primärschlüssel, da
+   die Kombination aus Buch und Autor eindeutig ist.
 
    Wird die Bibliografie eines Buches entfernt, so ist auch die Zuordnung der Autoren zu dieser
    Bibliografie obselet. Entsprechend wird über die Fremdschlüsseleigenschaft ON DELETE CASCASE
@@ -260,14 +255,8 @@ CREATE TABLE book_author
    liegt auch hier eine n:m-Beziehung vor. Diese wird über diese Zwischentabelle aufgelöst und
    ordnet Genres Büchern zu.
 
-   Als Attribute hat diese Beziehungstabelle ausschließlich die Fremdschlüsselbeziehungen zu Buch
-   (book) und Genre (genre). Beide Attribute bilden zusammen den Primärschlüssel, da die Kombination
-   aus Buch und Genre eindeutig ist.
-
-   Analog zur Behandlung der Beziehung zwischen Bibliografie und Autoren eines Buches, kann auch die
-   Zuweisung der Genres zum Buch entfernt werden, sobald dieses gelöscht wird. Daher wird auch
-   in diesem Fall die Fremdschlüsseleigenschaft ON DELETE CASCASE auf die Fremdschlüsselbeziehung
-   zu book gesetzt.
+   Der Aufbau und die Bedingungen folgen dabei dem zuvor beschreibenen Aufbau der Zuordnungstabelle
+   book_author.
  */
 
 CREATE TABLE book_genre
@@ -313,12 +302,6 @@ CREATE TABLE status
    der App Nutzer zu sperren, ohne sie und ihre Historie zu löschen. Bei Anlage eines Benutzers
    wird davon ausgegangen, dass dieser stets aktiv ist. Daher als Standardwert die Status-ID des Status mit
    dem Wert 'ACTIVE' gesetzt.
-
-   Für Telefonnummer und E-Mailadresse werden weitere Prüfkriterien hinterlegt. Vor allem bei der
-   E-Mailadresse wird so sichergestellt, dass sie in einem gültigen Format ohne Sonderzeichen,
-   mit @-Zeichen und einer abschließenden Domain gespeichert wird.
-   Da die E-Mailadresse in der Regel für die Authentifizierung und die Kommunikation verwendet
-   wird, wird ein UNIQUE-Constraint ergänzt.
  */
 CREATE TABLE user_account
 (
@@ -391,12 +374,10 @@ CREATE TABLE user_address
    beide Informationen nicht existieren kann.
 
    Zudem sind die Attribute Status (status) und Leihdauer (loan_duration_days) als
-   Pflicht gekennzeichnet, da die Leihdauer für den Ausleihprozess relevant ist. Sie könnte zwar
-   im Prozess individuell gesetzt werden, jedoch erscheint die Definition durch den Inhaber eines
-   Exemplares als realitätsnäher. Zudem wird ein Prüfkriterium gesetzt, sodass sichergestellt
-   ist, dass nur positive Zahlenwerte angegeben werden können. Der Status soll dazu
-   dienen, einzelne Exemplare temporär (BLOCKED) oder dauerhaft (INACTIVE) von der Leihe ausnehmen zu
-   können.
+   Pflicht gekennzeichnet, da die Leihdauer für den Ausleihprozess relevant ist. Zudem wird ein
+   Prüfkriterium  gesetzt, sodass sichergestellt ist, dass nur positive Zahlenwerte angegeben werden können
+   . Der Status soll dazu dienen, einzelne Exemplare temporär (BLOCKED) oder dauerhaft (INACTIVE) von der
+   Leihe ausnehmen zu können.
 
    Das Feld Zustand (condition) kann durch den Inhaber genutzt werden, um den Zustand des Buches
    kurz zu beschreiben. Die Abbildung über eine Entität mit definierten Status wäre hier denkbar,
@@ -428,16 +409,8 @@ CREATE TABLE book_copy
 /* Bereitstellungsart-Tabelle (book_copy)
    ----------------------
    Während des Ausleihprozesses stehen mehrere Möglichkeiten für die Bereitstellung der Exemplare
-   zur Verfügung (Versand, Abholung). Damit diese entsprechend einer ordentlichen Normalisierung
-   Ausleihvorgänge und Bereitstellarten miteinander verknüpft werden können, wird eine
-   Nachschlagetabelle für die Bereitstellungsarten erstellt. Diese enthält die technische ID
-   sowie eine eindeutige Bezeichnung (UNIQUE-Constraint) und wird als Pflichtfeld erstellt (NOT
-   NULL-Constraint). Dies eröffnet auch die Möglichkeit, beliebiege weitere Bereitstellungsarten
-   (z.B. digital) zu erweitern.
-
-   Für den Start werden die Buchungsarten jedoch zunächst auf Abholung und Versand eingeschränkt.
-   Hierfür wird ein Prüfkriterium hinzugefügt, das nur die Werte Versand ('SHIPPING') und Abholung
-   ('PICK_UP') zulässt.
+   zur Verfügung (Versand, Abholung).  Für den Start werden die Buchungsarten jedoch zunächst auf Abholung
+   und Versand eingeschränkt.
 */
 
 CREATE TABLE fulfillment_type
@@ -456,11 +429,7 @@ CREATE TABLE fulfillment_type
    Durch diese Zwischentabelle ist es möglich einem Exemplar unterschiedliche
    Bereitstellungsarten gleichzeitig zuzuweisen.
 
-   Die Tabelle besteht nur aus den Fremdschlüsseln auf das Exemplar (book_copy_id) und die Art
-   zur Bereitstellung (fulfillment_type_id), die gleichzeitig den zusammengesetzten
-   Primärschlüssel bilden.
-
-   Da die Zuordnung der Bereitstellungsart nicht mehr relevant ist, wenn ein Buchexemplar
+   Da die Zuordnung der Bereitstellungsart nicht mehr relevant ist, sobald ein Buchexemplar
    gelöscht wird, wird zum Verhindern verwaister Einträge die Fremdschlüsselbeziehung zum
    Exemplar auf ON DELETE CASCADE gesetzt.
 */
@@ -481,9 +450,7 @@ CREATE TABLE book_copy_fulfillment
    ----------------------
    Die Entität Rolle (role) beschreibt die unterschiedlichen Rollen, die ein Benutzer innerhalb
    der Ausleih-App zugewiesen bekommen kann. Die Rolle besteht dabei nur aus der Bezeichnung
-   (name) und einer eindeutigen ID (role_id). Da der Rollenname für eine eindeutige Zuordnung
-   nicht mehrfach vorkommen darf, wird auf der Spalte ein NOT NULL-Constraint
-   gesetzt.
+   (name) und einer eindeutigen ID (role_id).
 */
 
 CREATE TABLE role
@@ -498,9 +465,7 @@ CREATE TABLE role
    ----------------------
    Benutzer können im Rahmen der Ausleih-App unterschiedliche Rollen zugewiesen bekommen. Da es in
    der Regel sinnvoll ist, dass ein Benutzer eine oder mehrere Rollen inne haben kann, wird eine
-   Zuordnungstabelle von Benutzer und Rolle erstellt. Diese enthält sowohl den Verweis auf den
-   Benutzer (user_id) und die Rolle (role_id) als Fremdschlüssel. Beide Felder zusammen bilden
-   den zusammengesetzten Primärschlüssel.
+   Zuordnungstabelle von Benutzer und Rolle erstellt.
 
    Die Beziehung kann letztlich aufgelöst werden, wenn ein Benutzer oder die zugehörige Rolle
    gelöscht wird. Somit wird der Fremdschlüssel auf user_account mit einem ON DELETE CASCADE
@@ -528,15 +493,12 @@ CREATE TABLE user_role
    (day_of_week).
 
    Fachlich wird vorausgesetzt, dass alle drei Attribute für die Erstellung eines Zeitfensters
-   notwendig sind. Daher werden alle Attribute mit Hilfe von NOT NULL als Pflichtfelder
-   gekennzeichnet. Da ein Zeitfenster im Verlauf einer Woche mehrfach vorkommen kann, ist nur die
-   Kombination aller drei Felder eindeutig, sodass das UNIQUE-Constraint auf die Kombination der
-   Attribute gesetzt wird.
+   notwendig sind. Gleichzeitig sollte die Kombination aus Attribute nicht mehrfach aufteten. Dies ist aber
+   nur in Kombination aller drei Felder eindeutig.
 
-   Um sicherzustellen, dass bei der Eingabe nur zulässige Zeitfenster entstehen, werden zwei
-   Prüfkriterien festgelegt. So können die Wochentage nur als Zahlenwerte zwischen 1 und 7
-   angegeben werden. Zudem sollte das Ende eines Zeitfensters nicht vor dem Beginn liegen,
-   sodass die dies als weiteres Kriterium ergänzt wird.
+   Zudem wird eine Besonderheit modelliert: Entgegen der bislang vorgestellten Constraints werden hier
+   keine festen Werte als Vergleichskriterium herangezogen, sondern zwei Attribute miteinander verglichen.
+   So wird sichergestellt, dass das Endedatum nicht vor dem Beginndatum liegen kann.
 */
 
 CREATE TABLE timeslot
@@ -557,11 +519,6 @@ CREATE TABLE timeslot
    Verleiher festlegen, zu welchen dieser Zeitfenster Abholungungen an einer Abholadresse möglich
    sind. Die  Zuordnungstabelle Abholoptionen (pickup_option) verknüpft über
    Fremdschlüsselbeziehungen die Ids von Abholadressen (user_adress) und Zeitslots (timeslot).
-
-   Da eine Kombination aus Abholadresse und Zeitslot nicht mehrfach auftreten können, wird für
-   beide gemeinsam ein UNIQUE-Constraint gesetzt. Da der Zeitslot kein Pflichtfeld ist, wird
-   durch den Zusatz NULLS NOT DISTINCT sichergestellt, dass es je Benutzeradresse nur einmal die
-   Angabe kein Zeitslot geben kann.
 
    Aufgrund der Pflichtangabe einer Benutzeradresse innerhalb der Abholoption ist es sinnvoll,
    die Abholoption zu entfernen, sobald die Benutzeradresse gelöscht wird. Dies wird durch die
@@ -605,8 +562,6 @@ CREATE TABLE pickup_option
    REQUESTED gesetzt. Mithilfe eines CHECK-Constraints wird sichergestellt, dass nur die
    vorgesehenen Status REQUESTED, ON_LOAN, RETURNED und CANCELED gespeichert werden können.
 
-   Ein weiteres CHECK-Constraint verhindert, dass das Rückgabedatum zeitlich vor dem Ausleihdatum
-   liegen darf.
 */
 
 CREATE TABLE book_loan
@@ -645,15 +600,14 @@ CREATE TABLE book_loan
 */
 CREATE TABLE loan_history
 (
-    id          BIGINT GENERATED ALWAYS AS IDENTITY,
+    history_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     loan_id     bigint NOT NULL,
-    loan_status varchar,
+    loan_status varchar(10) NOT NULL,
     return_date date,
-    timestamp   timestamp,
+    timestamp   timestamp   NOT NULL,
 
     CONSTRAINT fk_book_loan_history FOREIGN KEY (loan_id) REFERENCES book_loan (loan_id) ON DELETE CASCADE
 );
-
 
 /* Bewertungs-Tabelle (loan_rating)
    ----------------------
@@ -663,7 +617,7 @@ CREATE TABLE loan_history
    eine numerische Bewertung sowie einen optionalen Kommentar.
 
    Da jeder Ausleihvorgang höchstens einmal bewertet werden soll, wird das Fremdschlüsselattribut
-   loan_id  mit einem UNIQUE-Constraint versehen. So wird verhindert, dass mehrere Bewertungen
+   loan_id mit einem UNIQUE-Constraint versehen. So wird verhindert, dass mehrere Bewertungen
    für denselben Ausleihvorgang angelegt werden. Die eigentliche Bewertung ist eine Pflichtangabe
    und wird durch ein CHECK-Constraint auf Werte zwischen eins und fünf begrenzt. Im Gegensatz
    dazu ist der Kommentar optional und kann für eine ausführlichere Begründung verwendet werden.
@@ -692,7 +646,6 @@ CREATE TABLE loan_rating
   Exemplare schneller zu finden*/
 CREATE INDEX IF NOT EXISTS idx_book_loan_activ_copy ON book_loan (book_copy_id) WHERE status IN ('REQUESTED',
                                                                                                  'ON_LOAN');
-
 /*Indizes auf Fremdschlüsselbeziehungen erleichtern die Suche nach Einträgen entgegen der
   Verknüpfungsrichtung. So kann ein Buchtitel über das Exemplar schnell gefunden werden, alle Exemplare zu
   einem Buchtitel werden jedoch nur über eine sequenzielle Suche gefunden.

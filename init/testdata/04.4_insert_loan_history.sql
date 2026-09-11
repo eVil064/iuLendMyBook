@@ -26,6 +26,4 @@ from book_loan l
                           (1, 3) status_id) status
          INNER JOIN book_copy bc on l.book_copy_id = bc.book_copy_id
 WHERE l.status = 'RETURNED'
-order by loan_id, status.status_id
-SELECT *
-from loan_history
+order by loan_id, status.status_id;
