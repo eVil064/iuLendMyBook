@@ -1,6 +1,6 @@
 # IU LendMyBook - Bücherausleihe
 
-Dieses Projekt beinhaltet das Konzept und die Implementierung einer Buchtausch-App auf Basis einer
+Das Projekt beinhaltet das Konzept und die Implementierung einer Buchtausch-App auf Basis einer
 PostgreSQL-Datenbank. Die Kernfunktionen der App sind dabei die Verwaltung der Stammdaten von Büchern,
 Buchexemplaren und Benutzern, sowie die Erstellung und Speicherung von Ausleihvorgängen inklusive deren
 Bewertungen durch die entleihenden Personen.
@@ -12,10 +12,13 @@ Fiktive, aber plausible Testdatensätze schaffen eine Grundlage, die es ermögli
 Datenbankstruktur, Funktionen und Prozeduren zu testen.
 
 Diese `README` enthält eine Installationsanleitung für die Plattformen Docker, Windows und Linux, sowie
-eine Kurzbeschreibung der verfügbaren Testfälle. Dazu gehören die modulweisen Prüfungen der Prozeduren,
-die End-to-End-Szenarien des Ausleihprozesses und die Performanceanalyse per SQL.
+eine Kurzbeschreibung der verfügbaren Testfälle. Dazu gehören die Prüfung der Prozeduren,
+ein End-to-End-Testszenario für den Ausleihprozess und die Performanceanalyse per SQL.
 
 # Installation
+
+Für die
+Realisierung der Datenbank und Durchführung der Tests wird PostgreSQL in Version 18 oder höher vorausgesetzt.
 
 ## Docker
 
